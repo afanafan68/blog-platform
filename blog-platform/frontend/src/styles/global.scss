@@ -1,0 +1,152 @@
+// ==========================================
+// 全局样式
+// ==========================================
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+body {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  color: $text-primary;
+  background-color: $bg-primary;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color $transition-fast;
+  &:hover {
+    color: $color-accent;
+  }
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+// 容器
+.container {
+  width: 100%;
+  max-width: $max-width;
+  margin: 0 auto;
+  padding: 0 $spacing-lg;
+  @media (max-width: $breakpoint-md) {
+    padding: 0 $spacing-md;
+  }
+}
+// 内容区域（窄版）
+.content-container {
+  width: 100%;
+  max-width: $content-width;
+  margin: 0 auto;
+  padding: 0 $spacing-lg;
+  @media (max-width: $breakpoint-md) {
+    padding: 0 $spacing-md;
+  }
+}
+// 页面布局
+.page {
+  min-height: calc(100vh - #{$nav-height});
+  padding-top: $spacing-3xl;
+  padding-bottom: $spacing-3xl;
+}
+// 标题样式
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: $line-height-tight;
+  color: $text-primary;
+}
+h1 { font-size: $font-size-4xl; }
+h2 { font-size: $font-size-3xl; }
+h3 { font-size: $font-size-2xl; }
+h4 { font-size: $font-size-xl; }
+h5 { font-size: $font-size-lg; }
+h6 { font-size: $font-size-base; }
+// 段落
+p {
+  margin-bottom: $spacing-md;
+  color: $text-secondary;
+  line-height: $line-height-relaxed;
+}
+// 按钮基础样式
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  border-radius: $radius-md;
+  border: none;
+  transition: all $transition-fast;
+  &-primary {
+    background-color: $color-accent;
+    color: $text-inverse;
+    &:hover {
+      background-color: $color-accent-hover;
+    }
+  }
+  &-outline {
+    background-color: transparent;
+    border: 1px solid $border-color;
+    color: $text-primary;
+    &:hover {
+      border-color: $color-accent;
+    }
+  }
+}
+// 卡片样式
+.card {
+  background-color: $bg-primary;
+  border: 1px solid $border-color;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: all $transition-normal;
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+// 输入框样式覆盖
+.el-input__wrapper {
+  border-radius: $radius-md !important;
+  box-shadow: none !important;
+  border: 1px solid $border-color !important;
+  &:hover, &.is-focus {
+    border-color: $color-accent !important;
+  }
+}
+// 按钮样式覆盖
+.el-button--primary {
+  background-color: $color-accent !important;
+  border-color: $color-accent !important;
+  &:hover {
+    background-color: $color-accent-hover !important;
+    border-color: $color-accent-hover !important;
+  }
+}
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: $bg-secondary;
+}
+::-webkit-scrollbar-thumb {
+  background: $border-color;
+  border-radius: $radius-sm;
+  &:hover {
+    background: $text-tertiary;
+  }
+}

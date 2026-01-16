@@ -24,7 +24,7 @@ npm run dev
 
 ##  团队成员
 
-- 王紫凡、梁琼尹、蓝子童
+- tmt、buzhii、Lodestar
 
 ## License
 

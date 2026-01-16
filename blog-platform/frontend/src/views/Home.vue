@@ -1,74 +1,57 @@
 <!--src/views/Home.vue - 首页-->
 <template>
-  <div class="home-page">
-    <div class="container">
-      <!-- 页面标题 -->
-      <header class="page-header">
-        <h1 class="page-title">最新文章</h1>
-        <p class="page-subtitle">发现精彩内容，分享你的故事</p>
-      </header>
+  <div class="home-page page">
+    <!-- 页面标题 -->
+    <header class="page-header">
+      <h1 class="page-title">最新文章</h1>
+      <p class="page-subtitle">发现精彩内容，分享你的故事</p>
+    </header>
 
-      <!-- 分类筛选 -->
-      <div class="category-filter">
-        <button
-          class="filter-btn"
-          :class="{ active: !selectedCategory }"
-          @click="handleCategoryChange(null)"
-        >
-          全部
-        </button>
-        <button
-          v-for="category in categories"
-          :key="category.id"
-          class="filter-btn"
-          :class="{ active: selectedCategory === category.id }"
-          @click="handleCategoryChange(category.id)"
-        >
-          {{ category.name }}
-        </button>
-      </div>
+    <!-- 文章列表 -->
+    <div class="blog-grid" v-loading="loading">
+      <BlogCard v-for="blog in blogList" :key="blog.id" :blog="blog" />
+    </div>
 
-      <!-- 文章列表 -->
-      <div class="blog-grid" v-loading="loading">
-        <BlogCard v-for="blog in blogList" :key="blog.id" :blog="blog" />
-      </div>
+    <!-- 空状态 -->
+    <div v-if="!loading && blogList.length === 0" class="empty-state">
+      <el-empty description="暂无文章">
+        <el-button type="primary" @click="router.push('/write')" v-if="userStore.isLoggedIn">
+          写第一篇文章
+        </el-button>
+      </el-empty>
+    </div>
 
-      <!-- 空状态 -->
-      <div v-if="!loading && blogList.length === 0" class="empty-state">
-        <el-empty description="暂无文章" />
-      </div>
-
-      <!-- 分页 -->
-      <div class="pagination" v-if="total > pageSize">
-        <el-pagination
-          v-model:current-page="currentPage"
-          :page-size="pageSize"
-          :total="total"
-          layout="prev, pager, next"
-          @current-change="handlePageChange"
-          background
-        />
-      </div>
+    <!-- 分页 -->
+    <div class="pagination" v-if="total > pageSize">
+      <el-pagination
+        v-model:current-page="currentPage"
+        :page-size="pageSize"
+        :total="total"
+        layout="prev, pager, next"
+        @current-change="handlePageChange"
+        background
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { getBlogList } from '@/api/blog'
-import { getCategories } from '@/api/category'
 import BlogCard from '@/components/blog/BlogCard.vue'
-import { onMounted, ref } from 'vue'
+import { useUserStore } from '@/stores/user'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-// 状态
+const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
+
 const loading = ref(false)
 const blogList = ref([])
-const categories = ref([])
-const selectedCategory = ref(null)
 const currentPage = ref(1)
 const pageSize = ref(9)
 const total = ref(0)
 
-// 获取博客列表
 const fetchBlogs = async () => {
   loading.value = true
   try {
@@ -76,13 +59,14 @@ const fetchBlogs = async () => {
       page: currentPage.value,
       size: pageSize.value
     }
-    // 添加分类筛选
-    if (selectedCategory.value) {
-      params.categoryId = selectedCategory.value
-    }
     
+    // 分类筛选（从侧边栏传来）
+    if (route.query.category) {
+      params.categoryId = route.query.category
+    }
+
     const res = await getBlogList(params)
-    blogList.value = res.data.list || res.data.records || []
+    blogList.value = res.data.list || []
     total.value = res.data.total || 0
   } catch (error) {
     console.error('Failed to fetch blogs:', error)
@@ -92,88 +76,53 @@ const fetchBlogs = async () => {
   }
 }
 
-// 获取分类列表
-const fetchCategories = async () => {
-  try {
-    const res = await getCategories()
-    categories.value = res.data || []
-  } catch (error) {
-    console.error('Failed to fetch categories:', error)
-  }
-}
-
-// 分类切换
-const handleCategoryChange = (categoryId) => {
-  selectedCategory.value = categoryId
-  currentPage.value = 1
-  fetchBlogs()
-}
-
-// 分页切换
 const handlePageChange = (page) => {
   currentPage.value = page
   fetchBlogs()
-  // 滚动到顶部
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
+// 监听分类变化
+watch(() => route.query.category, () => {
+  currentPage.value = 1
+  fetchBlogs()
+})
+
 onMounted(() => {
   fetchBlogs()
-  fetchCategories()
 })
 </script>
 
 <style lang="scss" scoped>
 .home-page {
-  padding: $spacing-3xl 0;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .page-header {
+  margin-bottom: $spacing-xl;
   text-align: center;
-  margin-bottom: $spacing-2xl;
+
+  @media (max-width: $breakpoint-md) {
+    text-align: left;
+  }
 }
 
 .page-title {
-  font-size: $font-size-4xl;
+  font-size: $font-size-3xl;
   font-weight: 700;
   color: $text-primary;
-  margin-bottom: $spacing-sm;
+  margin-bottom: $spacing-xs;
+
+  @media (max-width: $breakpoint-md) {
+    font-size: $font-size-2xl;
+  }
 }
 
 .page-subtitle {
   color: $text-secondary;
-  font-size: $font-size-lg;
+  font-size: $font-size-base;
   margin: 0;
-}
-
-.category-filter {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: $spacing-sm;
-  margin-bottom: $spacing-2xl;
-}
-
-.filter-btn {
-  padding: $spacing-sm $spacing-lg;
-  background-color: transparent;
-  border: 1px solid $border-color;
-  border-radius: 20px;
-  color: $text-secondary;
-  font-size: $font-size-sm;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover {
-    border-color: $color-accent;
-    color: $text-primary;
-  }
-
-  &.active {
-    background-color: $color-accent;
-    border-color: $color-accent;
-    color: $text-inverse;
-  }
 }
 
 .blog-grid {
@@ -188,11 +137,13 @@ onMounted(() => {
 
   @media (max-width: $breakpoint-md) {
     grid-template-columns: 1fr;
+    gap: $spacing-md;
   }
 }
 
 .empty-state {
   padding: $spacing-3xl 0;
+  text-align: center;
 }
 
 .pagination {

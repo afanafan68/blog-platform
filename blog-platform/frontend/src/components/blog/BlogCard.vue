@@ -1,7 +1,8 @@
+<!-- src/components/blog/BlogCard.vue - 博客卡片 -->
 <template>
   <article class="blog-card" @click="goToDetail">
     <div class="card-cover" v-if="blog.coverImage">
-      <img :src="blog.coverImage" :alt="blog.title" />
+      <img :src="blog.coverImage" :alt="blog.title" loading="lazy" />
     </div>
     <div class="card-content">
       <div class="card-meta">
@@ -18,8 +19,14 @@
           <span class="author-name">{{ blog.author?.nickname || '匿名' }}</span>
         </div>
         <div class="stats">
-          <span><el-icon><View /></el-icon> {{ blog.viewCount || 0 }}</span>
-          <span><el-icon><ChatDotRound /></el-icon> {{ blog.commentCount || 0 }}</span>
+          <span class="stat-item">
+            <el-icon><View /></el-icon>
+            {{ formatNumber(blog.viewCount) }}
+          </span>
+          <span class="stat-item">
+            <el-icon><ChatDotRound /></el-icon>
+            {{ formatNumber(blog.commentCount) }}
+          </span>
         </div>
       </div>
     </div>
@@ -27,9 +34,9 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { View, ChatDotRound } from '@element-plus/icons-vue'
+import { ChatDotRound, View } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   blog: {
@@ -41,7 +48,29 @@ const props = defineProps({
 const router = useRouter()
 
 const formatDate = (date) => {
-  return dayjs(date).format('YYYY年MM月DD日')
+  const now = dayjs()
+  const target = dayjs(date)
+  const diffDays = now.diff(target, 'day')
+
+  if (diffDays === 0) {
+    return '今天'
+  } else if (diffDays === 1) {
+    return '昨天'
+  } else if (diffDays < 7) {
+    return `${diffDays}天前`
+  } else {
+    return target.format('MM-DD')
+  }
+}
+
+const formatNumber = (num) => {
+  if (!num) return 0
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + 'w'
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k'
+  }
+  return num
 }
 
 const goToDetail = () => {
@@ -52,25 +81,29 @@ const goToDetail = () => {
 <style lang="scss" scoped>
 .blog-card {
   background-color: $bg-primary;
-  border: 1px solid $border-color;
   border-radius: $radius-lg;
   overflow: hidden;
   cursor: pointer;
   transition: all $transition-normal;
+  box-shadow: $shadow-sm;
 
   &:hover {
     transform: translateY(-4px);
     box-shadow: $shadow-lg;
 
     .card-title {
-      color: $color-accent;
+      color: $color-primary;
+    }
+
+    .card-cover img {
+      transform: scale(1.05);
     }
   }
 }
 
 .card-cover {
   width: 100%;
-  height: 200px;
+  height: 180px;
   overflow: hidden;
 
   img {
@@ -78,10 +111,6 @@ const goToDetail = () => {
     height: 100%;
     object-fit: cover;
     transition: transform $transition-normal;
-  }
-
-  &:hover img {
-    transform: scale(1.05);
   }
 }
 
@@ -97,10 +126,11 @@ const goToDetail = () => {
 
   .category {
     padding: 2px 8px;
-    background-color: $bg-secondary;
-    color: $text-secondary;
+    background-color: $color-primary-light;
+    color: $color-primary;
     font-size: $font-size-xs;
     border-radius: $radius-sm;
+    font-weight: 500;
   }
 
   .date {
@@ -110,7 +140,7 @@ const goToDetail = () => {
 }
 
 .card-title {
-  font-size: $font-size-xl;
+  font-size: $font-size-lg;
   font-weight: 600;
   color: $text-primary;
   margin-bottom: $spacing-sm;
@@ -130,7 +160,7 @@ const goToDetail = () => {
   margin-bottom: $spacing-md;
 
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -157,13 +187,13 @@ const goToDetail = () => {
 .stats {
   display: flex;
   gap: $spacing-md;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: $text-tertiary;
   font-size: $font-size-xs;
-
-  span {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
 }
 </style>

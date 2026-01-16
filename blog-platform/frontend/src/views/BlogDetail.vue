@@ -1,12 +1,18 @@
+<!-- src/views/BlogDetail.vue - 文章详情页 -->
 <template>
-  <div class="detail-page" v-loading="loading">
+  <div class="detail-page page" v-loading="loading">
     <article class="article" v-if="blog">
       <!-- 文章头部 -->
       <header class="article-header">
         <div class="article-meta">
-          <span class="category" v-if="blog.categoryName">{{ blog.categoryName }}</span>
+          <el-tag v-if="blog.categoryName" type="info" size="small">
+            {{ blog.categoryName }}
+          </el-tag>
           <span class="date">{{ formatDate(blog.createdAt) }}</span>
-          <span class="views"><el-icon><View /></el-icon> {{ blog.viewCount }} 阅读</span>
+          <span class="views">
+            <el-icon><View /></el-icon>
+            {{ blog.viewCount }} 阅读
+          </span>
         </div>
         <h1 class="article-title">{{ blog.title }}</h1>
         <div class="author-info">
@@ -27,12 +33,18 @@
 
       <!-- 文章内容 -->
       <div class="article-content">
-        <MdPreview :modelValue="blog.content" />
+        <MdPreview :modelValue="blog.content" :theme="'light'" />
       </div>
 
       <!-- 标签 -->
       <div class="article-tags" v-if="blog.tags?.length">
-        <el-tag v-for="tag in blog.tags" :key="tag.id" type="info" effect="plain">
+        <el-tag 
+          v-for="tag in blog.tags" 
+          :key="tag.id" 
+          type="info" 
+          effect="plain"
+          size="small"
+        >
           {{ tag.name }}
         </el-tag>
       </div>
@@ -42,28 +54,31 @@
         <el-button
           :type="isLiked ? 'primary' : 'default'"
           :icon="StarFilled"
+          round
           @click="handleLike"
         >
           {{ isLiked ? '已点赞' : '点赞' }} {{ blog.likeCount }}
         </el-button>
 
         <template v-if="isAuthor">
-          <el-button :icon="Edit" @click="handleEdit">编辑</el-button>
-          <el-button :icon="Delete" type="danger" plain @click="handleDelete">删除</el-button>
+          <el-button :icon="Edit" round @click="handleEdit">编辑</el-button>
+          <el-button :icon="Delete" type="danger" round plain @click="handleDelete">删除</el-button>
         </template>
       </div>
 
-      <!-- 分隔线 -->
       <el-divider />
 
       <!-- 评论区 -->
       <section class="comments-section">
-        <h3 class="section-title">评论 ({{ comments.length }})</h3>
+        <h3 class="section-title">
+          <el-icon><ChatDotRound /></el-icon>
+          评论 ({{ comments.length }})
+        </h3>
 
         <!-- 评论输入框 -->
         <div class="comment-form" v-if="userStore.isLoggedIn">
-          <el-avatar :size="40" :src="userStore.userInfo?.avatar">
-            {{ userStore.userInfo?.nickname?.charAt(0) || 'U' }}
+          <el-avatar :size="40" :src="userStore.avatar">
+            {{ userStore.nickname?.charAt(0) || 'U' }}
           </el-avatar>
           <div class="comment-input-wrapper">
             <el-input
@@ -73,6 +88,7 @@
               placeholder="写下你的评论..."
               maxlength="500"
               show-word-limit
+              resize="none"
             />
             <el-button
               type="primary"
@@ -84,6 +100,7 @@
             </el-button>
           </div>
         </div>
+
         <div class="login-tip" v-else>
           <router-link to="/login">登录</router-link> 后参与评论
         </div>
@@ -134,7 +151,7 @@
 import { deleteBlog, getBlogDetail, likeBlog } from '@/api/blog'
 import { createComment, deleteComment, getComments, likeComment } from '@/api/comment'
 import { useUserStore } from '@/stores/user'
-import { Delete, Edit, Star, StarFilled, View } from '@element-plus/icons-vue'
+import { ChatDotRound, Delete, Edit, Star, StarFilled, View } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
@@ -181,7 +198,7 @@ const fetchBlogDetail = async () => {
 const fetchComments = async () => {
   try {
     const res = await getComments(route.params.id)
-    comments.value = res.data
+    comments.value = res.data || []
   } catch (error) {
     console.error('Failed to fetch comments:', error)
   }
@@ -291,13 +308,19 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .detail-page {
-  padding: $spacing-3xl 0;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .article {
-  max-width: $content-width;
-  margin: 0 auto;
-  padding: 0 $spacing-lg;
+  background-color: $bg-primary;
+  border-radius: $radius-lg;
+  padding: $spacing-2xl;
+
+  @media (max-width: $breakpoint-md) {
+    padding: $spacing-lg;
+    border-radius: $radius-md;
+  }
 }
 
 .article-header {
@@ -312,13 +335,6 @@ onMounted(() => {
   color: $text-tertiary;
   font-size: $font-size-sm;
 
-  .category {
-    padding: 2px 10px;
-    background-color: $bg-secondary;
-    border-radius: $radius-sm;
-    color: $text-secondary;
-  }
-
   .views {
     display: flex;
     align-items: center;
@@ -327,7 +343,7 @@ onMounted(() => {
 }
 
 .article-title {
-  font-size: $font-size-4xl;
+  font-size: $font-size-3xl;
   font-weight: 700;
   color: $text-primary;
   line-height: 1.3;
@@ -395,6 +411,13 @@ onMounted(() => {
       padding: $spacing-md;
     }
 
+    code {
+      background-color: $bg-secondary;
+      padding: 2px 6px;
+      border-radius: $radius-sm;
+      font-size: 0.9em;
+    }
+
     blockquote {
       border-left: 4px solid $border-color;
       padding-left: $spacing-md;
@@ -428,6 +451,9 @@ onMounted(() => {
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
   font-size: $font-size-xl;
   font-weight: 600;
   color: $text-primary;
@@ -457,7 +483,7 @@ onMounted(() => {
   margin-bottom: $spacing-xl;
 
   a {
-    color: $color-accent;
+    color: $color-primary;
     font-weight: 500;
   }
 }
@@ -523,5 +549,6 @@ onMounted(() => {
 
 .not-found {
   padding: $spacing-3xl 0;
+  text-align: center;
 }
 </style>

@@ -1,60 +1,76 @@
+<!-- src/views/Login.vue - 登录页（独立布局） -->
 <template>
   <div class="auth-page">
     <div class="auth-container">
-      <div class="auth-card">
-        <div class="auth-header">
-          <h1 class="auth-title">欢迎回来</h1>
-          <p class="auth-subtitle">登录以继续访问</p>
+      <!-- 左侧品牌区域 -->
+      <div class="auth-brand">
+        <div class="brand-content">
+          <div class="brand-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <h1 class="brand-title">Blog Platform</h1>
+          <p class="brand-desc">一个简洁优雅的博客平台，记录你的想法与创意</p>
         </div>
+      </div>
 
-        <el-form
-          ref="formRef"
-          :model="form"
-          :rules="rules"
-          class="auth-form"
-          @submit.prevent="handleSubmit"
-        >
-          <el-form-item prop="username">
-            <el-input
-              v-model="form.username"
-              placeholder="用户名或邮箱"
-              size="large"
-              :prefix-icon="User"
-            />
-          </el-form-item>
-
-          <el-form-item prop="password">
-            <el-input
-              v-model="form.password"
-              type="password"
-              placeholder="密码"
-              size="large"
-              :prefix-icon="Lock"
-              show-password
-            />
-          </el-form-item>
-
-          <div class="form-options">
-            <el-checkbox v-model="form.remember">记住我</el-checkbox>
-            <a href="#" class="forgot-link">忘记密码？</a>
+      <!-- 右侧表单区域 -->
+      <div class="auth-form-wrapper">
+        <div class="auth-card">
+          <div class="auth-header">
+            <h2 class="auth-title">欢迎回来</h2>
+            <p class="auth-subtitle">登录以继续访问</p>
           </div>
 
-          <el-form-item>
-            <el-button
-              type="primary"
-              size="large"
-              :loading="loading"
-              native-type="submit"
-              class="submit-btn"
-            >
-              登录
-            </el-button>
-          </el-form-item>
-        </el-form>
+          <el-form
+            ref="formRef"
+            :model="form"
+            :rules="rules"
+            class="auth-form"
+            @submit.prevent="handleSubmit"
+          >
+            <el-form-item prop="username">
+              <el-input
+                v-model="form.username"
+                placeholder="用户名或邮箱"
+                size="large"
+                :prefix-icon="User"
+              />
+            </el-form-item>
 
-        <div class="auth-footer">
-          <span>还没有账号？</span>
-          <router-link to="/register" class="link">立即注册</router-link>
+            <el-form-item prop="password">
+              <el-input
+                v-model="form.password"
+                type="password"
+                placeholder="密码"
+                size="large"
+                :prefix-icon="Lock"
+                show-password
+              />
+            </el-form-item>
+
+            <div class="form-options">
+              <el-checkbox v-model="form.remember">记住我</el-checkbox>
+            </div>
+
+            <el-form-item>
+              <el-button
+                type="primary"
+                size="large"
+                :loading="loading"
+                native-type="submit"
+                class="submit-btn"
+              >
+                登录
+              </el-button>
+            </el-form-item>
+          </el-form>
+
+          <div class="auth-footer">
+            <span>还没有账号？</span>
+            <router-link to="/register" class="link">立即注册</router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -62,11 +78,11 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { User, Lock } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
+import { Lock, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
@@ -102,7 +118,7 @@ const handleSubmit = async () => {
       password: form.password
     })
     ElMessage.success('登录成功')
-
+    
     // 跳转到之前的页面或首页
     const redirect = route.query.redirect || '/'
     router.push(redirect)
@@ -116,28 +132,105 @@ const handleSubmit = async () => {
 
 <style lang="scss" scoped>
 .auth-page {
-  min-height: calc(100vh - #{$nav-height});
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-xl;
+  min-height: 100vh;
   background-color: $bg-secondary;
 }
 
 .auth-container {
-  width: 100%;
-  max-width: 420px;
+  display: flex;
+  min-height: 100vh;
+
+  @media (max-width: $breakpoint-md) {
+    flex-direction: column;
+  }
+}
+
+.auth-brand {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  padding: $spacing-2xl;
+
+  @media (max-width: $breakpoint-md) {
+    padding: $spacing-xl;
+    min-height: 200px;
+  }
+}
+
+.brand-content {
+  text-align: center;
+  color: white;
+}
+
+.brand-logo {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto $spacing-lg;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: $radius-xl;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  @media (max-width: $breakpoint-md) {
+    width: 60px;
+    height: 60px;
+    margin-bottom: $spacing-md;
+
+    svg {
+      width: 30px;
+      height: 30px;
+    }
+  }
+}
+
+.brand-title {
+  font-size: $font-size-3xl;
+  font-weight: 700;
+  margin-bottom: $spacing-sm;
+
+  @media (max-width: $breakpoint-md) {
+    font-size: $font-size-2xl;
+  }
+}
+
+.brand-desc {
+  font-size: $font-size-base;
+  opacity: 0.8;
+  max-width: 300px;
+  margin: 0 auto;
+
+  @media (max-width: $breakpoint-md) {
+    font-size: $font-size-sm;
+  }
+}
+
+.auth-form-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-2xl;
+  background-color: $bg-primary;
+
+  @media (max-width: $breakpoint-md) {
+    padding: $spacing-xl;
+  }
 }
 
 .auth-card {
-  background-color: $bg-primary;
-  border-radius: $radius-xl;
-  padding: $spacing-2xl;
-  box-shadow: $shadow-lg;
+  width: 100%;
+  max-width: 400px;
 }
 
 .auth-header {
-  text-align: center;
   margin-bottom: $spacing-xl;
 }
 
@@ -151,6 +244,7 @@ const handleSubmit = async () => {
 .auth-subtitle {
   color: $text-secondary;
   font-size: $font-size-sm;
+  margin: 0;
 }
 
 .auth-form {
@@ -169,15 +263,6 @@ const handleSubmit = async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: $spacing-lg;
-
-  .forgot-link {
-    color: $text-secondary;
-    font-size: $font-size-sm;
-
-    &:hover {
-      color: $color-accent;
-    }
-  }
 }
 
 .submit-btn {
@@ -194,7 +279,7 @@ const handleSubmit = async () => {
   font-size: $font-size-sm;
 
   .link {
-    color: $color-accent;
+    color: $color-primary;
     font-weight: 500;
     margin-left: $spacing-xs;
 

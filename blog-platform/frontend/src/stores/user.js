@@ -1,24 +1,43 @@
+// ---------------------------------------------
+// 用户状态管理 src/user.js
+// ---------------------------------------------
 import { getUserInfo, login, logout, register } from '@/api/auth'
 import { getToken, removeToken, setToken } from '@/utils/auth'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+
 export const useUserStore = defineStore('user', () => {
+  // 状态
   const token = ref(getToken())
   const userInfo = ref(null)
+
+  // 计算属性
   const isLoggedIn = computed(() => !!token.value)
-  // 登录
+  const userId = computed(() => userInfo.value?.id)
+  const username = computed(() => userInfo.value?.username)
+  const nickname = computed(() => userInfo.value?.nickname || userInfo.value?.username)
+  const avatar = computed(() => userInfo.value?.avatar)
+
+  /**
+   * 登录
+   */
   async function doLogin(loginForm) {
     try {
       const res = await login(loginForm)
-      token.value = res.data.token
-      setToken(res.data.token)
+      const { token: newToken } = res.data
+      token.value = newToken
+      setToken(newToken)
+      // 登录后获取用户信息
       await fetchUserInfo()
       return res
     } catch (error) {
       throw error
     }
   }
-  // 注册
+
+  /**
+   * 注册
+   */
   async function doRegister(registerForm) {
     try {
       const res = await register(registerForm)
@@ -27,45 +46,88 @@ export const useUserStore = defineStore('user', () => {
       throw error
     }
   }
-  // 获取用户信息
+
+  /**
+   * 获取用户信息
+   */
   async function fetchUserInfo() {
     try {
       const res = await getUserInfo()
       userInfo.value = res.data
       return res
     } catch (error) {
+      // 获取失败，清除登录状态
+      token.value = null
+      userInfo.value = null
+      removeToken()
       throw error
     }
   }
-  // 登出
+
+  /**
+   * 登出
+   */
   async function doLogout() {
     try {
       await logout()
+    } catch (error) {
+      console.error('Logout error:', error)
     } finally {
+      // 无论成功失败，都清除本地状态
       token.value = null
       userInfo.value = null
       removeToken()
     }
   }
-  // 初始化（刷新页面时）
+
+  /**
+   * 更新用户信息（本地）
+   */
+  function updateUserInfo(data) {
+    if (userInfo.value) {
+      userInfo.value = { ...userInfo.value, ...data }
+    }
+  }
+
+  /**
+   * 初始化（页面刷新时调用）
+   */
   async function init() {
     if (token.value) {
       try {
         await fetchUserInfo()
       } catch (error) {
-        token.value = null
-        removeToken()
+        console.error('Init user info failed:', error)
       }
     }
   }
+
+  /**
+   * 重置状态
+   */
+  function reset() {
+    token.value = null
+    userInfo.value = null
+    removeToken()
+  }
+
   return {
+    // 状态
     token,
     userInfo,
+    // 计算属性
     isLoggedIn,
+    userId,
+    username,
+    nickname,
+    avatar,
+    // 方法
     doLogin,
     doRegister,
     fetchUserInfo,
     doLogout,
-    init
+    updateUserInfo,
+    init,
+    reset
   }
 })

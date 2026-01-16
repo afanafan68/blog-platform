@@ -131,16 +131,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { deleteBlog, getBlogDetail, likeBlog } from '@/api/blog'
+import { createComment, deleteComment, getComments, likeComment } from '@/api/comment'
+import { useUserStore } from '@/stores/user'
+import { Delete, Edit, Star, StarFilled, View } from '@element-plus/icons-vue'
+import dayjs from 'dayjs'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
-import { View, StarFilled, Star, Edit, Delete } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import dayjs from 'dayjs'
-import { useUserStore } from '@/stores/user'
-import { getBlogDetail, deleteBlog, likeBlog } from '@/api/blog'
-import { getComments, createComment, deleteComment, likeComment } from '@/api/comment'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()

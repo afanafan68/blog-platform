@@ -1,3 +1,4 @@
+<!-- src/views/BlogEdit.vue - 文章编辑页 -->
 <template>
   <div class="edit-page">
     <div class="edit-container">
@@ -110,14 +111,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { createBlog, getBlogDetail, getCategories, getTags, updateBlog } from '@/api/blog'
+import { uploadImage } from '@/api/upload'
+import { Plus } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { Plus } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { getBlogDetail, createBlog, updateBlog, getCategories, getTags } from '@/api/blog'
-import { uploadImage } from '@/api/upload'
+import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()

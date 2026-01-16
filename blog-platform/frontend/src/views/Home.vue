@@ -1,3 +1,4 @@
+<!--src/views/Home.vue - 首页-->
 <template>
   <div class="home-page">
     <div class="container">
@@ -12,7 +13,7 @@
         <button
           class="filter-btn"
           :class="{ active: !selectedCategory }"
-          @click="selectedCategory = null"
+          @click="handleCategoryChange(null)"
         >
           全部
         </button>
@@ -21,7 +22,7 @@
           :key="category.id"
           class="filter-btn"
           :class="{ active: selectedCategory === category.id }"
-          @click="selectedCategory = category.id"
+          @click="handleCategoryChange(category.id)"
         >
           {{ category.name }}
         </button>
@@ -45,6 +46,7 @@
           :total="total"
           layout="prev, pager, next"
           @current-change="handlePageChange"
+          background
         />
       </div>
     </div>
@@ -52,10 +54,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { getBlogList } from '@/api/blog'
+import { getCategories } from '@/api/category'
 import BlogCard from '@/components/blog/BlogCard.vue'
-import { getBlogList, getCategories } from '@/api/blog'
+import { onMounted, ref } from 'vue'
 
+// 状态
 const loading = ref(false)
 const blogList = ref([])
 const categories = ref([])
@@ -64,42 +68,54 @@ const currentPage = ref(1)
 const pageSize = ref(9)
 const total = ref(0)
 
+// 获取博客列表
 const fetchBlogs = async () => {
   loading.value = true
   try {
-    const res = await getBlogList({
+    const params = {
       page: currentPage.value,
-      size: pageSize.value,
-      categoryId: selectedCategory.value
-    })
-    blogList.value = res.data.list
-    total.value = res.data.total
+      size: pageSize.value
+    }
+    // 添加分类筛选
+    if (selectedCategory.value) {
+      params.categoryId = selectedCategory.value
+    }
+    
+    const res = await getBlogList(params)
+    blogList.value = res.data.list || res.data.records || []
+    total.value = res.data.total || 0
   } catch (error) {
     console.error('Failed to fetch blogs:', error)
+    blogList.value = []
   } finally {
     loading.value = false
   }
 }
 
+// 获取分类列表
 const fetchCategories = async () => {
   try {
     const res = await getCategories()
-    categories.value = res.data
+    categories.value = res.data || []
   } catch (error) {
     console.error('Failed to fetch categories:', error)
   }
 }
 
+// 分类切换
+const handleCategoryChange = (categoryId) => {
+  selectedCategory.value = categoryId
+  currentPage.value = 1
+  fetchBlogs()
+}
+
+// 分页切换
 const handlePageChange = (page) => {
   currentPage.value = page
   fetchBlogs()
+  // 滚动到顶部
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-
-watch(selectedCategory, () => {
-  currentPage.value = 1
-  fetchBlogs()
-})
 
 onMounted(() => {
   fetchBlogs()
@@ -127,6 +143,7 @@ onMounted(() => {
 .page-subtitle {
   color: $text-secondary;
   font-size: $font-size-lg;
+  margin: 0;
 }
 
 .category-filter {

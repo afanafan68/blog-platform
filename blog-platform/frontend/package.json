@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.3",
+    "mockjs": "^1.1.0",
     "sass": "^1.70.0",
     "unplugin-auto-import": "^0.17.4",
     "unplugin-vue-components": "^0.26.0",

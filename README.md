@@ -12,6 +12,20 @@
 
 └── docs/                   # 项目文档
 
+## 项目结构
+
+### 环境要求
+
+\- Node.js 18+
+
+\- pnpm 8+
+
+\- JDK 17+
+
+\- MySQL 8.0+
+
+\- Redis 7+
+
 ## 快速开始
 
 ### 前端
@@ -21,6 +35,25 @@ cd blog-platform/frontend
 npm install
 npm run dev
 ```
+
+### 启动开发服务器
+
+pnpm dev
+
+### 访问地址
+
+前端页面：http://localhost:5173
+
+后端接口：http://localhost:8080
+
+API文档：http://localhost:8080/doc.html
+
+### 测试账号
+
+| 用户名 | 密码   | 角色     |
+| ------ | ------ | -------- |
+| admin  | 123456 | 管理员   |
+| tmt    | 123456 | 普通用户 |
 
 ##  团队成员
 

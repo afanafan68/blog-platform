@@ -7,6 +7,7 @@ import './auth'
 import './blog'
 import './category'
 import './comment'
+import './favorites'
 import './tag'
 import './user'
 

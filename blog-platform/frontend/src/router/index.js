@@ -56,6 +56,12 @@ const routes = [
     meta: { title: '个人设置', requiresAuth: true }
   },
   {
+    path: '/favorites',
+    name: 'Favorites',
+    component: () => import('@/views/Favorites.vue'),
+    meta: { title: '我的收藏', requiresAuth: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),
@@ -76,7 +82,7 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   // 设置页面标题
-  document.title = `${to.meta.title} | Blog Platform`
+  document.title = `${to.meta.title} | C-Blog`
   const userStore = useUserStore()
   // 需要登录的页面
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {

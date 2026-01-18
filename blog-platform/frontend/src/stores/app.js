@@ -28,6 +28,11 @@ export const useAppStore = defineStore('app', () => {
     mobileSidebarVisible.value = false
   }
 
+  // 切换移动端侧边栏
+  function toggleMobileSidebar() {
+    mobileSidebarVisible.value = !mobileSidebarVisible.value
+  }
+
   // 设置移动端状态
   function setMobile(value) {
     isMobile.value = value
@@ -42,6 +47,7 @@ export const useAppStore = defineStore('app', () => {
     mobileSidebarVisible,
     toggleSidebar,
     closeMobileSidebar,
+    toggleMobileSidebar,
     setMobile
   }
 })

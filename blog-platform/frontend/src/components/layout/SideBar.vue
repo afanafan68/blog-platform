@@ -15,7 +15,7 @@
             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
           </svg>
         </div>
-        <span class="logo-text" v-show="!appStore.sidebarCollapsed">Blog</span>
+        <span class="logo-text" v-show="!appStore.sidebarCollapsed">C-Blog</span>
       </router-link>
       
       <!-- 折叠按钮 -->
@@ -30,7 +30,6 @@
     <!-- 导航菜单 -->
     <nav class="sidebar-nav">
       <div class="nav-section">
-        <div class="nav-section-title" v-show="!appStore.sidebarCollapsed">导航</div>
         <ul class="nav-list">
           <li>
             <router-link 
@@ -43,23 +42,33 @@
               <span class="nav-text" v-show="!appStore.sidebarCollapsed">首页</span>
             </router-link>
           </li>
-          <li>
+          <li v-if="userStore.isLoggedIn">
             <router-link 
-              to="/search" 
+              to="/user/profile" 
               class="nav-item" 
-              :class="{ active: $route.path === '/search' }"
+              :class="{ active: $route.path === '/user/profile' }"
               @click="handleNavClick"
             >
-              <el-icon :size="20"><Search /></el-icon>
-              <span class="nav-text" v-show="!appStore.sidebarCollapsed">搜索</span>
+              <el-icon :size="20"><User /></el-icon>
+              <span class="nav-text" v-show="!appStore.sidebarCollapsed">个人中心</span>
+            </router-link>
+          </li>
+          <li v-if="userStore.isLoggedIn">
+            <router-link 
+              to="/favorites" 
+              class="nav-item" 
+              :class="{ active: $route.path === '/favorites' }"
+              @click="handleNavClick"
+            >
+              <el-icon :size="20"><Star /></el-icon>
+              <span class="nav-text" v-show="!appStore.sidebarCollapsed">收藏</span>
             </router-link>
           </li>
         </ul>
       </div>
 
-      <!-- 登录后显示 -->
+      <!-- 登录后显示创作区 -->
       <div class="nav-section" v-if="userStore.isLoggedIn">
-        <div class="nav-section-title" v-show="!appStore.sidebarCollapsed">创作</div>
         <ul class="nav-list">
           <li>
             <router-link 
@@ -71,35 +80,6 @@
               <el-icon :size="20"><Edit /></el-icon>
               <span class="nav-text" v-show="!appStore.sidebarCollapsed">写文章</span>
             </router-link>
-          </li>
-          <li>
-            <router-link 
-              to="/user/profile" 
-              class="nav-item" 
-              :class="{ active: $route.path.startsWith('/user') }"
-              @click="handleNavClick"
-            >
-              <el-icon :size="20"><Document /></el-icon>
-              <span class="nav-text" v-show="!appStore.sidebarCollapsed">我的文章</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
-
-      <!-- 分类列表 -->
-      <div class="nav-section">
-        <div class="nav-section-title" v-show="!appStore.sidebarCollapsed">分类</div>
-        <ul class="nav-list">
-          <li v-for="category in categories" :key="category.id">
-            <a 
-              href="javascript:;"
-              class="nav-item"
-              :class="{ active: selectedCategory === category.id }"
-              @click="handleCategoryClick(category.id)"
-            >
-              <el-icon :size="20"><Folder /></el-icon>
-              <span class="nav-text" v-show="!appStore.sidebarCollapsed">{{ category.name }}</span>
-            </a>
           </li>
         </ul>
       </div>
@@ -126,16 +106,6 @@
           </button>
         </div>
       </template>
-      <template v-else>
-        <router-link 
-          to="/login" 
-          class="login-btn"
-          @click="handleNavClick"
-        >
-          <el-icon :size="20"><User /></el-icon>
-          <span v-show="!appStore.sidebarCollapsed">登录 / 注册</span>
-        </router-link>
-      </template>
     </div>
   </aside>
 
@@ -152,14 +122,14 @@ import { getCategories } from '@/api/category'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import {
-    Document,
-    Edit,
-    Expand,
-    Fold,
-    Folder,
-    House, Search,
-    Setting, SwitchButton,
-    User
+  Edit,
+  Expand,
+  Fold,
+  House,
+  Setting,
+  Star,
+  SwitchButton,
+  User
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'

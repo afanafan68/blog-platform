@@ -1,13 +1,15 @@
 <!-- src/components/layout/TopBar.vue - 顶部栏 -->
 <template>
   <header class="topbar">
-    <!-- 移动端菜单按钮 -->
-    <button class="menu-btn" @click="appStore.toggleSidebar">
-      <el-icon :size="24"><Menu /></el-icon>
-    </button>
+    <!-- 左侧区域：移动端菜单按钮 -->
+    <div class="topbar-left">
+      <button class="menu-btn" @click="appStore.toggleMobileSidebar">
+        <el-icon :size="24"><Menu /></el-icon>
+      </button>
+    </div>
 
-    <!-- 搜索框 -->
-    <div class="search-wrapper">
+    <!-- 中间区域：搜索框 + 写文章按钮 -->
+    <div class="topbar-center">
       <el-input
         v-model="searchKeyword"
         placeholder="搜索文章..."
@@ -16,15 +18,25 @@
         @keyup.enter="handleSearch"
         class="search-input"
       />
+      <!-- 写文章按钮（已登录时显示） -->
+      <router-link v-if="userStore.isLoggedIn" to="/write" class="write-btn">
+        <el-icon><Edit /></el-icon>
+        <span class="btn-text">写文章</span>
+      </router-link>
     </div>
 
-    <!-- 右侧操作区 -->
-    <div class="topbar-actions">
-      <template v-if="userStore.isLoggedIn">
-        <router-link to="/write" class="write-btn">
-          <el-icon><Edit /></el-icon>
-          <span class="btn-text">写文章</span>
+    <!-- 右侧操作区：登录/注册按钮 -->
+    <div class="topbar-right">
+      <template v-if="!userStore.isLoggedIn">
+        <router-link to="/login" class="login-btn">
+          登录
         </router-link>
+        <router-link to="/register" class="register-btn">
+          注册
+        </router-link>
+      </template>
+      <template v-else>
+        <div class="user-placeholder"></div>
       </template>
     </div>
   </header>
@@ -61,6 +73,7 @@ const handleSearch = () => {
   border-bottom: 1px solid $border-color;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 $spacing-lg;
   gap: $spacing-md;
   z-index: $z-header;
@@ -73,6 +86,29 @@ const handleSearch = () => {
   @media (max-width: $breakpoint-md) {
     left: 0;
   }
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  min-width: 50px;
+}
+
+.topbar-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-md;
+  max-width: 600px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  min-width: 120px;
+  justify-content: flex-end;
 }
 
 .menu-btn {
@@ -96,12 +132,10 @@ const handleSearch = () => {
   }
 }
 
-.search-wrapper {
-  flex: 1;
-  max-width: 480px;
-}
-
 .search-input {
+  flex: 1;
+  max-width: 400px;
+
   :deep(.el-input__wrapper) {
     border-radius: 20px;
     background-color: $bg-secondary;
@@ -113,12 +147,6 @@ const handleSearch = () => {
       border-color: $border-color;
     }
   }
-}
-
-.topbar-actions {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
 }
 
 .write-btn {
@@ -133,6 +161,8 @@ const handleSearch = () => {
   font-size: $font-size-sm;
   font-weight: 500;
   transition: background-color $transition-fast;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   &:hover {
     background-color: $color-accent-hover;
@@ -143,5 +173,40 @@ const handleSearch = () => {
       display: none;
     }
   }
+}
+
+.login-btn {
+  padding: $spacing-sm $spacing-md;
+  color: $text-primary;
+  text-decoration: none;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  border-radius: 20px;
+  transition: all $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: $bg-secondary;
+  }
+}
+
+.register-btn {
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-accent;
+  color: $text-inverse;
+  text-decoration: none;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  border-radius: 20px;
+  transition: background-color $transition-fast;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: $color-accent-hover;
+  }
+}
+
+.user-placeholder {
+  width: 40px;
 }
 </style>

@@ -94,14 +94,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { Edit, Delete, View, Star } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import dayjs from 'dayjs'
-import { useUserStore } from '@/stores/user'
-import { getUserBlogs, deleteBlog } from '@/api/blog'
+import { deleteBlog, getUserBlogs } from '@/api/blog'
 import { getUserStats } from '@/api/user'
+import { useUserStore } from '@/stores/user'
+import { Delete, Edit, Star, View } from '@element-plus/icons-vue'
+import dayjs from 'dayjs'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -148,8 +148,8 @@ const fetchMyBlogs = async () => {
       size: pageSize.value,
       status: statusMap[articleStatus.value]
     })
-    blogs.value = res.data.list
-    total.value = res.data.total
+    blogs.value = res.data.records || []
+    total.value = res.data.total || 0
   } catch (error) {
     console.error('Failed to fetch blogs:', error)
   } finally {

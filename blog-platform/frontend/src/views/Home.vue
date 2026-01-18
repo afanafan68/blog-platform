@@ -66,7 +66,7 @@ const fetchBlogs = async () => {
     }
 
     const res = await getBlogList(params)
-    blogList.value = res.data.list || []
+    blogList.value = res.data.records || []
     total.value = res.data.total || 0
   } catch (error) {
     console.error('Failed to fetch blogs:', error)

@@ -1,93 +1,80 @@
-<!-- src/views/Register.vue - 注册页（独立布局） -->
+<!-- src/views/Register.vue - 注册页（居中小窗口样式） -->
 <template>
   <div class="auth-page">
-    <div class="auth-container">
-      <!-- 左侧品牌区域 -->
-      <div class="auth-brand">
-        <div class="brand-content">
-          <div class="brand-logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <h1 class="brand-title">Blog Platform</h1>
-          <p class="brand-desc">加入我们，开始你的创作之旅</p>
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
         </div>
+        <h2 class="auth-title">创建账号</h2>
+        <p class="auth-subtitle">填写信息完成注册</p>
       </div>
 
-      <!-- 右侧表单区域 -->
-      <div class="auth-form-wrapper">
-        <div class="auth-card">
-          <div class="auth-header">
-            <h2 class="auth-title">创建账号</h2>
-            <p class="auth-subtitle">填写信息完成注册</p>
-          </div>
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        class="auth-form"
+        @submit.prevent="handleSubmit"
+      >
+        <el-form-item prop="username">
+          <el-input
+            v-model="form.username"
+            placeholder="用户名"
+            size="large"
+            :prefix-icon="User"
+          />
+        </el-form-item>
 
-          <el-form
-            ref="formRef"
-            :model="form"
-            :rules="rules"
-            class="auth-form"
-            @submit.prevent="handleSubmit"
+        <el-form-item prop="email">
+          <el-input
+            v-model="form.email"
+            placeholder="邮箱"
+            size="large"
+            :prefix-icon="Message"
+          />
+        </el-form-item>
+
+        <el-form-item prop="password">
+          <el-input
+            v-model="form.password"
+            type="password"
+            placeholder="密码（至少6位）"
+            size="large"
+            :prefix-icon="Lock"
+            show-password
+          />
+        </el-form-item>
+
+        <el-form-item prop="confirmPassword">
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            placeholder="确认密码"
+            size="large"
+            :prefix-icon="Lock"
+            show-password
+          />
+        </el-form-item>
+
+        <el-form-item>
+          <el-button
+            type="primary"
+            size="large"
+            :loading="loading"
+            native-type="submit"
+            class="submit-btn"
           >
-            <el-form-item prop="username">
-              <el-input
-                v-model="form.username"
-                placeholder="用户名"
-                size="large"
-                :prefix-icon="User"
-              />
-            </el-form-item>
+            注册
+          </el-button>
+        </el-form-item>
+      </el-form>
 
-            <el-form-item prop="email">
-              <el-input
-                v-model="form.email"
-                placeholder="邮箱"
-                size="large"
-                :prefix-icon="Message"
-              />
-            </el-form-item>
-
-            <el-form-item prop="password">
-              <el-input
-                v-model="form.password"
-                type="password"
-                placeholder="密码（至少6位）"
-                size="large"
-                :prefix-icon="Lock"
-                show-password
-              />
-            </el-form-item>
-
-            <el-form-item prop="confirmPassword">
-              <el-input
-                v-model="form.confirmPassword"
-                type="password"
-                placeholder="确认密码"
-                size="large"
-                :prefix-icon="Lock"
-                show-password
-              />
-            </el-form-item>
-
-            <el-form-item>
-              <el-button
-                type="primary"
-                size="large"
-                :loading="loading"
-                native-type="submit"
-                class="submit-btn"
-              >
-                注册
-              </el-button>
-            </el-form-item>
-          </el-form>
-
-          <div class="auth-footer">
-            <span>已有账号？</span>
-            <router-link to="/login" class="link">立即登录</router-link>
-          </div>
-        </div>
+      <div class="auth-footer">
+        <span>已有账号？</span>
+        <router-link to="/login" class="link">立即登录</router-link>
       </div>
     </div>
   </div>
@@ -164,105 +151,43 @@ const handleSubmit = async () => {
 <style lang="scss" scoped>
 .auth-page {
   min-height: 100vh;
-  background-color: $bg-secondary;
-}
-
-.auth-container {
-  display: flex;
-  min-height: 100vh;
-
-  @media (max-width: $breakpoint-md) {
-    flex-direction: column;
-  }
-}
-
-.auth-brand {
-  flex: 1;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  padding: $spacing-2xl;
-
-  @media (max-width: $breakpoint-md) {
-    padding: $spacing-xl;
-    min-height: 200px;
-  }
-}
-
-.brand-content {
-  text-align: center;
-  color: white;
-}
-
-.brand-logo {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto $spacing-lg;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: $radius-xl;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  svg {
-    width: 40px;
-    height: 40px;
-  }
-
-  @media (max-width: $breakpoint-md) {
-    width: 60px;
-    height: 60px;
-    margin-bottom: $spacing-md;
-
-    svg {
-      width: 30px;
-      height: 30px;
-    }
-  }
-}
-
-.brand-title {
-  font-size: $font-size-3xl;
-  font-weight: 700;
-  margin-bottom: $spacing-sm;
-
-  @media (max-width: $breakpoint-md) {
-    font-size: $font-size-2xl;
-  }
-}
-
-.brand-desc {
-  font-size: $font-size-base;
-  opacity: 0.8;
-  max-width: 300px;
-  margin: 0 auto;
-
-  @media (max-width: $breakpoint-md) {
-    font-size: $font-size-sm;
-  }
-}
-
-.auth-form-wrapper {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: $spacing-2xl;
-  background-color: $bg-primary;
-
-  @media (max-width: $breakpoint-md) {
-    padding: $spacing-xl;
-  }
+  padding: $spacing-xl;
 }
 
 .auth-card {
   width: 100%;
   max-width: 400px;
+  background-color: #ffffff;
+  border-radius: $radius-lg;
+  padding: $spacing-2xl;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eaeaea;
 }
 
 .auth-header {
+  text-align: center;
   margin-bottom: $spacing-xl;
+}
+
+.brand-logo {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto $spacing-md;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 30px;
+    height: 30px;
+    color: white;
+  }
 }
 
 .auth-title {

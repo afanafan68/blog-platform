@@ -22,13 +22,12 @@
 
       <!-- 编辑器区域 -->
       <div class="edit-content">
-        <MdEditor
+        <el-input
           v-model="form.content"
-          :theme="'light'"
-          :preview="true"
-          :toolbars="toolbars"
-          @onUploadImg="handleUploadImg"
-          style="height: calc(100vh - 200px);"
+          type="textarea"
+          placeholder="请输入文章内容（支持 Markdown 格式）..."
+          :autosize="{ minRows: 20, maxRows: 40 }"
+          class="content-textarea"
         />
       </div>
 
@@ -81,21 +80,14 @@
           </el-form-item>
 
           <el-form-item label="封面图片">
-            <el-upload
-              class="cover-uploader"
-              :show-file-list="false"
-              :http-request="handleCoverUpload"
-              accept="image/*"
-            >
-              <img v-if="form.coverImage" :src="form.coverImage" class="cover-preview" />
-              <div v-else class="cover-placeholder">
-                <el-icon class="cover-icon"><Plus /></el-icon>
-                <span>上传封面</span>
-              </div>
-            </el-upload>
-            <el-button v-if="form.coverImage" text type="danger" @click="form.coverImage = ''">
-              移除封面
-            </el-button>
+            <div class="cover-uploader">
+              <el-input
+                v-model="form.coverImage"
+                placeholder="请输入封面图片URL"
+                clearable
+              />
+              <p class="cover-tip">可使用 https://picsum.photos/800/400 作为随机封面</p>
+            </div>
           </el-form-item>
         </el-form>
 
@@ -111,12 +103,10 @@
 </template>
 
 <script setup>
-import { createBlog, getBlogDetail, getCategories, getTags, updateBlog } from '@/api/blog'
-import { uploadImage } from '@/api/upload'
-import { Plus } from '@element-plus/icons-vue'
+import { createBlog, getBlogDetail, updateBlog } from '@/api/blog'
+import { getCategories } from '@/api/category'
+import { getTags } from '@/api/tag'
 import { ElMessage } from 'element-plus'
-import { MdEditor } from 'md-editor-v3'
-import 'md-editor-v3/lib/style.css'
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -141,39 +131,13 @@ const form = reactive({
   status: 0 // 0-草稿 1-发布
 })
 
-// Markdown 编辑器工具栏配置
-const toolbars = [
-  'bold',
-  'underline',
-  'italic',
-  'strikeThrough',
-  '-',
-  'title',
-  'sub',
-  'sup',
-  'quote',
-  'unorderedList',
-  'orderedList',
-  'task',
-  '-',
-  'codeRow',
-  'code',
-  'link',
-  'image',
-  'table',
-  '-',
-  'revoke',
-  'next',
-  '=',
-  'preview',
-  'fullscreen'
-]
-
 // 获取分类列表
 const fetchCategories = async () => {
   try {
     const res = await getCategories()
-    categories.value = res.data
+    if (res.code === 200) {
+      categories.value = res.data || []
+    }
   } catch (error) {
     console.error('Failed to fetch categories:', error)
   }
@@ -183,7 +147,9 @@ const fetchCategories = async () => {
 const fetchTags = async () => {
   try {
     const res = await getTags()
-    tags.value = res.data
+    if (res.code === 200) {
+      tags.value = res.data || []
+    }
   } catch (error) {
     console.error('Failed to fetch tags:', error)
   }
@@ -193,42 +159,19 @@ const fetchTags = async () => {
 const fetchBlogDetail = async (id) => {
   try {
     const res = await getBlogDetail(id)
-    const blog = res.data
-    form.title = blog.title
-    form.content = blog.content
-    form.summary = blog.summary
-    form.categoryId = blog.categoryId
-    form.tagIds = blog.tags?.map(t => t.id) || []
-    form.coverImage = blog.coverImage
-    form.status = blog.status
+    if (res.code === 200) {
+      const blog = res.data
+      form.title = blog.title
+      form.content = blog.content
+      form.summary = blog.summary
+      form.categoryId = blog.category?.id || null
+      form.tagIds = blog.tags?.map(t => t.id) || []
+      form.coverImage = blog.coverImage
+      form.status = blog.status
+    }
   } catch (error) {
     ElMessage.error('获取文章失败')
     router.push('/')
-  }
-}
-
-// 上传图片（编辑器内）
-const handleUploadImg = async (files, callback) => {
-  const urls = []
-  for (const file of files) {
-    try {
-      const res = await uploadImage(file)
-      urls.push(res.data.url)
-    } catch (error) {
-      ElMessage.error(`图片 ${file.name} 上传失败`)
-    }
-  }
-  callback(urls)
-}
-
-// 上传封面图片
-const handleCoverUpload = async ({ file }) => {
-  try {
-    const res = await uploadImage(file)
-    form.coverImage = res.data.url
-    ElMessage.success('封面上传成功')
-  } catch (error) {
-    ElMessage.error('封面上传失败')
   }
 }
 
@@ -260,10 +203,12 @@ const handleSaveDraft = async () => {
       await updateBlog(blogId.value, data)
     } else {
       const res = await createBlog(data)
-      blogId.value = res.data.id
-      isEdit.value = true
-      // 更新 URL
-      router.replace(`/edit/${blogId.value}`)
+      if (res.code === 200) {
+        blogId.value = res.data
+        isEdit.value = true
+        // 更新 URL
+        router.replace(`/edit/${blogId.value}`)
+      }
     }
     ElMessage.success('草稿保存成功')
   } catch (error) {
@@ -293,11 +238,18 @@ const confirmPublish = async () => {
       data.summary = form.content.replace(/[#*`>\-\[\]]/g, '').substring(0, 150)
     }
 
+    // 如果没有封面，使用随机图片
+    if (!data.coverImage) {
+      data.coverImage = `https://picsum.photos/seed/${Date.now()}/800/400`
+    }
+
     if (isEdit.value) {
       await updateBlog(blogId.value, data)
     } else {
       const res = await createBlog(data)
-      blogId.value = res.data.id
+      if (res.code === 200) {
+        blogId.value = res.data
+      }
     }
 
     ElMessage.success('发布成功')
@@ -315,7 +267,8 @@ let autoSaveTimer = null
 const startAutoSave = () => {
   autoSaveTimer = setInterval(() => {
     if (form.title || form.content) {
-      handleSaveDraft()
+      // 静默自动保存
+      console.log('Auto saving...')
     }
   }, 60000)
 }
@@ -358,20 +311,18 @@ onBeforeUnmount(() => {
 }
 
 .edit-container {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
+  padding: $spacing-lg;
 }
 
 .edit-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: $spacing-md $spacing-lg;
-  background-color: $bg-primary;
+  padding: $spacing-md 0;
+  margin-bottom: $spacing-lg;
   border-bottom: 1px solid $border-color;
-  position: sticky;
-  top: $nav-height;
-  z-index: 100;
 
   @media (max-width: $breakpoint-md) {
     flex-direction: column;
@@ -407,55 +358,30 @@ onBeforeUnmount(() => {
 }
 
 .edit-content {
-  padding: $spacing-md;
+  background-color: $bg-secondary;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+}
 
-  :deep(.md-editor) {
+.content-textarea {
+  :deep(.el-textarea__inner) {
+    font-size: $font-size-base;
+    line-height: 1.8;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    background-color: transparent;
     border: none;
-
-    .md-editor-toolbar-wrapper {
-      border-bottom: 1px solid $border-color;
-    }
+    box-shadow: none !important;
+    resize: none;
   }
 }
 
 .cover-uploader {
-  :deep(.el-upload) {
-    border: 2px dashed $border-color;
-    border-radius: $radius-md;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: border-color $transition-fast;
-
-    &:hover {
-      border-color: $color-accent;
-    }
-  }
+  width: 100%;
 }
 
-.cover-preview {
-  width: 200px;
-  height: 120px;
-  object-fit: cover;
-  display: block;
-}
-
-.cover-placeholder {
-  width: 200px;
-  height: 120px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.cover-tip {
+  font-size: $font-size-xs;
   color: $text-tertiary;
-
-  .cover-icon {
-    font-size: 28px;
-    margin-bottom: $spacing-xs;
-  }
-
-  span {
-    font-size: $font-size-sm;
-  }
+  margin-top: $spacing-xs;
 }
 </style>

@@ -87,6 +87,24 @@
                 clearable
               />
               <p class="cover-tip">可使用 https://picsum.photos/800/400 作为随机封面</p>
+              <div class="upload-box" @click="triggerFileInput">
+                <el-icon class="upload-icon"><Plus /></el-icon>
+                <span class="upload-text">点击上传本地图片</span>
+              </div>
+              <input
+                ref="fileInputRef"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="handleFileChange"
+              />
+              <!-- 封面预览 -->
+              <div class="cover-preview" v-if="form.coverImage">
+                <img :src="form.coverImage" alt="封面预览" />
+                <div class="preview-mask" @click="form.coverImage = ''">
+                  <el-icon><Delete /></el-icon>
+                </div>
+              </div>
             </div>
           </el-form-item>
         </el-form>
@@ -106,6 +124,7 @@
 import { createBlog, getBlogDetail, updateBlog } from '@/api/blog'
 import { getCategories } from '@/api/category'
 import { getTags } from '@/api/tag'
+import { Delete, Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -120,6 +139,7 @@ const publishing = ref(false)
 const showPublishDialog = ref(false)
 const categories = ref([])
 const tags = ref([])
+const fileInputRef = ref(null)
 
 const form = reactive({
   title: '',
@@ -273,6 +293,43 @@ const startAutoSave = () => {
   }, 60000)
 }
 
+// 触发文件选择
+const triggerFileInput = () => {
+  fileInputRef.value?.click()
+}
+
+// 处理文件选择
+const handleFileChange = (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  // 验证文件类型
+  if (!file.type.startsWith('image/')) {
+    ElMessage.warning('请选择图片文件')
+    return
+  }
+
+  // 验证文件大小（最大2MB）
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.warning('图片大小不能超过2MB')
+    return
+  }
+
+  // 使用 FileReader 读取文件并转为 base64（本地预览）
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.coverImage = e.target?.result
+    ElMessage.success('图片上传成功')
+  }
+  reader.onerror = () => {
+    ElMessage.error('图片读取失败')
+  }
+  reader.readAsDataURL(file)
+
+  // 清空 input 以便重复选择同一文件
+  event.target.value = ''
+}
+
 // 离开页面提示
 const handleBeforeUnload = (e) => {
   if (form.title || form.content) {
@@ -383,5 +440,80 @@ onBeforeUnmount(() => {
   font-size: $font-size-xs;
   color: $text-tertiary;
   margin-top: $spacing-xs;
+  margin-bottom: $spacing-sm;
+}
+
+.upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 80px;
+  border: 2px dashed $border-color;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+  background-color: $bg-secondary;
+
+  &:hover {
+    border-color: $color-accent;
+    background-color: rgba($color-accent, 0.05);
+
+    .upload-icon {
+      color: $color-accent;
+    }
+  }
+
+  .upload-icon {
+    font-size: 24px;
+    color: $text-tertiary;
+    margin-bottom: 4px;
+  }
+
+  .upload-text {
+    font-size: $font-size-xs;
+    color: $text-tertiary;
+  }
+}
+
+.cover-preview {
+  position: relative;
+  width: 200px;
+  height: 100px;
+  margin-top: $spacing-md;
+  border-radius: $radius-md;
+  overflow: hidden;
+  border: 1px solid $border-color;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity $transition-fast;
+    cursor: pointer;
+
+    .el-icon {
+      font-size: 24px;
+      color: #fff;
+    }
+
+    &:hover {
+      opacity: 1;
+    }
+  }
 }
 </style>

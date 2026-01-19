@@ -9,7 +9,6 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppLayout: typeof import('./components/layout/AppLayout.vue')['default']
     BlogCard: typeof import('./components/blog/BlogCard.vue')['default']
-    BlogList: typeof import('./components/blog/BlogList.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
@@ -34,8 +33,6 @@ declare module 'vue' {
     ElTag: typeof import('element-plus/es')['ElTag']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     Footer: typeof import('./components/layout/Footer.vue')['default']
-    HelloWorld: typeof import('./components/HelloWorld.vue')['default']
-    NavBaar: typeof import('./components/layout/NavBaar.vue')['default']
     NavBar: typeof import('./components/layout/NavBar.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

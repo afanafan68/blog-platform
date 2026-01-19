@@ -29,9 +29,18 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       scss: {
-        additionalData: `@use "src/styles/variables.scss" as *;`,
+        additionalData: `@use "@/styles/variables.scss" as *;`,
         api: 'modern-compiler',
-        includePaths: [resolve(__dirname)]
+        importers: [
+          {
+            findFileUrl(url) {
+              if (url.startsWith('@/')) {
+                return new URL(url.replace('@/', 'file:///' + resolve(__dirname, 'src/').replace(/\\/g, '/') + '/'))
+              }
+              return null
+            }
+          }
+        ]
       }
     }
   },

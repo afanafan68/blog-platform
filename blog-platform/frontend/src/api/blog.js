@@ -91,9 +91,15 @@ export function likeBlog(id) {
  * 添加收藏
  * POST /api/favorites
  * @param {Object} data - { blogId, tagName }
+ * @description 将博客添加到指定收藏夹。如果 tagName 对应的收藏夹不存在，后端将自动创建该收藏夹标签。
  */
 export function addFavorite(data) {
-  return request.post('/favorites', data)
+  // 确保发送的数据包含 blogId 和 tagName
+  const requestData = {
+    blogId: data.blogId,
+    tagName: data.tagName || '默认收藏夹'
+  }
+  return request.post('/favorites', requestData)
 }
 
 /**
@@ -106,8 +112,18 @@ export function removeFavorite(blogId) {
 }
 
 /**
- * 获取收藏标签列表
+ * 获取收藏列表
+ * GET /api/favorites/list
+ * @param {Object} params - { page, size, tag }
+ */
+export function getFavoriteList(params) {
+  return request.get('/favorites/list', { params })
+}
+
+/**
+ * 获取收藏标签列表（收藏夹列表）
  * GET /api/favorites/tags
+ * @description 获取当前用户的所有收藏夹列表，包含收藏夹ID、名称和收藏数量
  */
 export function getFavoriteTags() {
   return request.get('/favorites/tags')
@@ -120,4 +136,46 @@ export function getFavoriteTags() {
  */
 export function checkFavorite(blogId) {
   return request.get(`/favorites/check/${blogId}`)
+}
+
+// ------------------------------------------------------
+// 收藏夹管理API（收藏文件夹）
+// ------------------------------------------------------
+
+/**
+ * 创建收藏夹
+ * POST /api/favorites/folder
+ * @param {Object} data - { name }
+ * @description 创建一个新的收藏夹，包含用户主键、收藏文件夹主键、收藏文件夹名字
+ */
+export function createFavoriteFolder(data) {
+  return request.post('/favorites/folder', data)
+}
+
+/**
+ * 获取收藏夹列表
+ * GET /api/favorites/folders
+ * @description 获取当前用户的所有收藏夹，返回收藏文件夹主键、收藏文件夹名字、收藏数量
+ */
+export function getFavoriteFolders() {
+  return request.get('/favorites/folders')
+}
+
+/**
+ * 删除收藏夹
+ * DELETE /api/favorites/folder/{folderId}
+ * @param {number} folderId - 收藏夹ID
+ */
+export function deleteFavoriteFolder(folderId) {
+  return request.delete(`/favorites/folder/${folderId}`)
+}
+
+/**
+ * 重命名收藏夹
+ * PUT /api/favorites/folder/{folderId}
+ * @param {number} folderId - 收藏夹ID
+ * @param {Object} data - { name }
+ */
+export function renameFavoriteFolder(folderId, data) {
+  return request.put(`/favorites/folder/${folderId}`, data)
 }

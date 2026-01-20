@@ -259,8 +259,8 @@ const confirmPublish = async () => {
       data.summary = form.content.replace(/[#*`>\-\[\]]/g, '').substring(0, 150)
     }
 
-    // 如果没有封面，使用随机图片
-    if (!data.coverImage) {
+    // 只有在没有封面时才使用随机图片
+    if (!data.coverImage || data.coverImage.trim() === '') {
       data.coverImage = `https://picsum.photos/seed/${Date.now()}/800/400`
     }
 

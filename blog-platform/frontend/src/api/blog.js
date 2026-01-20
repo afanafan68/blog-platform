@@ -52,10 +52,16 @@ export function deleteBlog(id) {
 /**
  * 搜索博客
  * GET /api/blog/search
- * @param {Object} params - { q, page, size, categoryId, sort }
+ * @param {Object} params - { keyword, page, size, categoryId, sort }
  */
 export function searchBlog(params) {
-  return request.get('/blog/search', { params })
+  // 兼容前端传入的 q 参数，转换为后端需要的 keyword
+  const searchParams = { ...params }
+  if (searchParams.q) {
+    searchParams.keyword = searchParams.q
+    delete searchParams.q
+  }
+  return request.get('/blog/search', { params: searchParams })
 }
 
 /**

@@ -24,11 +24,17 @@ export const useUserStore = defineStore('user', () => {
   async function doLogin(loginForm) {
     try {
       const res = await login(loginForm)
-      const { token: newToken } = res.data
+      // 后端返回格式：{ token, tokenHead, userInfo }
+      const { token: newToken, userInfo: userData } = res.data
       token.value = newToken
       setToken(newToken)
-      // 登录后获取用户信息
-      await fetchUserInfo()
+      // 直接使用登录返回的用户信息
+      if (userData) {
+        userInfo.value = userData
+      } else {
+        // 如果登录响应没有包含用户信息，则单独获取
+        await fetchUserInfo()
+      }
       return res
     } catch (error) {
       throw error

@@ -10,9 +10,14 @@ import router from './router'
 // 引入全局样式
 import '@/styles/global.scss'
 
-// 开发环境引入 Mock
-if (import.meta.env.DEV) {
-  import('./mock')
+// 根据环境变量决定是否启用 Mock
+// 设置 VITE_USE_MOCK=true 启用 Mock 数据，否则使用真实后端 API
+if (import.meta.env.VITE_USE_MOCK === 'true') {
+  import('./mock').then(() => {
+    console.log('Mock 数据已启用')
+  })
+} else {
+  console.log('使用真实后端 API')
 }
 
 const app = createApp(App)

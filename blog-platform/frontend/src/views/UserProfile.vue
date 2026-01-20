@@ -56,7 +56,7 @@
               <h3 class="article-title" @click="goToDetail(blog)">{{ blog.title }}</h3>
               <p class="article-summary">{{ blog.summary }}</p>
               <div class="article-meta">
-                <span class="date">{{ formatDate(blog.createdAt) }}</span>
+                <span class="date">{{ formatDate(blog.createTime) }}</span>
                 <span class="views" v-if="blog.status === 1">
                   <el-icon><View /></el-icon> {{ blog.viewCount }}
                 </span>

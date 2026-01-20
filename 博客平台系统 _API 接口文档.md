@@ -392,6 +392,7 @@
 
 **Base Path**: `/api/user`
 
+**废弃**
 #### 3.2.1 获取用户信息
 
 - **URL**: `/{id}`
@@ -1113,6 +1114,117 @@
   "code": 200,
   "message": "success",
   "data": true
+}
+```
+
+#### 3.5.6 创建新的收藏夹
+
+- **URL**: `/folder`
+- **Method**: `POST`
+- **Header**: `Authorization` (必填)
+- **说明**: 为当前用户创建新的收藏夹。
+
+
+**请求参数说明**
+
+| 参数名 | 类型    | 必填 | 说明                           | 示例   |
+| ------ | ------- | ---- | ------------------------------ | ------ |
+| folder_name | String | 是   | 创建的收藏夹的名字           | 默认收藏夹 |
+
+
+**响应示例**
+
+```
+{
+  "code": 200,
+  "message": "success",
+  "data": null
+}
+```
+
+#### 3.5.7 获取收藏夹列表
+
+- **URL**: `/folders`
+- **Method**: `GET`
+- **Header**: `Authorization` (必填)
+- **说明**: 获取当前用户的收藏夹列表。
+
+
+**请求参数说明**
+
+无
+
+**响应示例**
+
+```
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {"id": 1, "folder_name": "前端"},
+    {"id": 3, "folder_name": "后端"},
+    {"id": 9, "folder_name": "运维"},
+  ]
+}
+```
+
+#### 3.5.8 根据收藏夹名称获取博客列表
+
+- **URL**: `/folder/blog`
+- **Method**: `GET`
+- **Header**: `Authorization` (必填)
+- **说明**: 获取当前用户的收藏夹列表。
+
+
+**请求参数说明**
+
+
+| 参数名 | 类型    | 必填 | 说明                           | 示例   |
+| ------ | ------- | ---- | ------------------------------ | ------ |
+| page   | Integer | 否   | 页码 (默认1)                   | 1      |
+| size   | Integer | 否   | 每页条数 (默认10)              | 10     |
+| folder_name | String | 是   | 收藏夹的名字           | 默认收藏夹 |
+
+**响应数据说明**
+
+| 字段名  | 类型  | 说明                            |
+| ------- | ----- | ------------------------------- |
+| total   | Long  | 总记录数                        |
+| size    | Long  | 每页大小                        |
+| current | Long  | 当前页码                        |
+| pages   | Long  | 总页数                          |
+| records | Array | 收藏博客列表 (List<BlogListVO>) |
+
+**响应示例**
+
+```
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 20,
+    "size": 10,
+    "current": 1,
+    "pages": 2,
+    "records": [
+      {
+        "id": 1,
+        "title": "Blog 标题",
+        "summary": "这是摘要...",
+        "coverImage": "http//..."
+        "viewCount": 100,
+        "likeCount": 10,
+        "createTime": "2026-01-06T12:00:00",
+        "author": {
+          "id": 1001,
+          "nickname": "zhangsan",
+          "avatar": "http//..."
+        },
+        "category": { "id": 1, "name": "后端" },
+        "tags": [{ "id": 1, "name": "Java" }]
+      }
+    ]
+  }
 }
 ```
 

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.FavoriteFolderMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pojo.entity.FavoriteFolder">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="user_id" property="userId"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <resultMap id="FolderVOResultMap" type="com.example.pojo.vo.FavoriteFolderVO">
+        <result column="id" property="id"/>
+        <result column="name" property="folderName"/>
+    </resultMap>
+
+    <!-- 插入收藏夹 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO favorite_folder (name, user_id, create_time)
+        VALUES (#{name}, #{userId}, #{createTime})
+    </insert>
+
+    <!-- 根据用户ID和收藏夹名称查询 -->
+    <select id="findByUserIdAndName" resultMap="BaseResultMap">
+        SELECT id, name, user_id, create_time
+        FROM favorite_folder
+        WHERE user_id = #{userId} AND name = #{name}
+    </select>
+
+    <!-- 根据用户ID获取收藏夹列表 -->
+    <select id="findByUserId" resultMap="FolderVOResultMap">
+        SELECT id, name
+        FROM favorite_folder
+        WHERE user_id = #{userId}
+        ORDER BY create_time ASC
+    </select>
+
+    <!-- 根据ID删除收藏夹 -->
+    <delete id="deleteById">
+        DELETE FROM favorite_folder WHERE id = #{id}
+    </delete>
+
+    <!-- 根据用户ID删除所有收藏夹 -->
+    <delete id="deleteByUserId">
+        DELETE FROM favorite_folder WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

@@ -10,9 +10,12 @@ import com.example.pojo.vo.BlogListVO;
 import com.example.pojo.vo.PageResultVO;
 import com.example.result.Result;
 import com.example.service.BlogService;
+import com.aliyun.oss.AliOSSUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/blog")
@@ -20,6 +23,9 @@ import org.springframework.web.bind.annotation.*;
 public class BlogController {
 
     private final BlogService blogService;
+    
+    @Autowired
+    private AliOSSUtils aliOSSUtils;
 
     @GetMapping("/list")
     public Result<PageResultVO<BlogListVO>> getBlogList(BlogQueryDTO queryDTO) {
@@ -57,16 +63,18 @@ public class BlogController {
     @GetMapping("/search")
     public Result<PageResultVO<BlogListVO>> searchBlog(@RequestParam String keyword,
                                                        @RequestParam(defaultValue = "1") Integer page,
-                                                       @RequestParam(defaultValue = "10") Integer size) {
-        PageResultVO<BlogListVO> pageResult = blogService.searchBlog(keyword, page, size);
+                                                       @RequestParam(defaultValue = "10") Integer size,
+                                                       @RequestParam(required = false) Long categoryId) {
+        PageResultVO<BlogListVO> pageResult = blogService.searchBlog(keyword, page, size, categoryId);
         return Result.success(pageResult);
     }
 
     @GetMapping("/user/{userId}")
     public Result<PageResultVO<BlogListVO>> getUserBlogs(@PathVariable Long userId,
                                                          @RequestParam(defaultValue = "1") Integer page,
-                                                         @RequestParam(defaultValue = "10") Integer size) {
-        PageResultVO<BlogListVO> pageResult = blogService.getUserBlogs(userId, page, size);
+                                                         @RequestParam(defaultValue = "10") Integer size,
+                                                         @RequestParam(required = false) Integer status) {
+        PageResultVO<BlogListVO> pageResult = blogService.getUserBlogs(userId, page, size, status);
         return Result.success(pageResult);
     }
 
@@ -75,5 +83,15 @@ public class BlogController {
         Long userId = BaseContext.getCurrentId();
         blogService.toggleLike(id, userId);
         return Result.success();
+    }
+
+    /**
+     * 上传博客封面图片
+     * POST /api/blog/cover
+     */
+    @PostMapping("/cover")
+    public Result<String> uploadCover(MultipartFile file) throws Exception {
+        String coverUrl = aliOSSUtils.upload(file);
+        return Result.success(coverUrl, "上传成功");
     }
 }

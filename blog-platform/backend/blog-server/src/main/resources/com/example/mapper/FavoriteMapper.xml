@@ -6,6 +6,7 @@
         <id column="id" property="id"/>
         <result column="user_id" property="userId"/>
         <result column="blog_id" property="blogId"/>
+        <result column="tag_name" property="tagName"/>
         <result column="create_time" property="createTime"/>
     </resultMap>
 
@@ -24,8 +25,8 @@
 
     <!-- 插入收藏记录 -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO favorite (user_id, blog_id, create_time)
-        VALUES (#{userId}, #{blogId}, #{createTime})
+        INSERT INTO favorite (user_id, blog_id, tag_name, create_time)
+        VALUES (#{userId}, #{blogId}, #{tagName}, #{createTime})
     </insert>
 
     <!-- 根据用户ID和博客ID删除收藏记录 -->
@@ -61,14 +62,34 @@
         </if>
     </select>
 
-    <!-- 获取用户收藏的博客所包含的标签列表及对应收藏数量 -->
-    <select id="findTagsWithCountByUserId" resultMap="FavoriteTagResultMap">
-        SELECT t.id, t.name, COUNT(DISTINCT f.blog_id) as count
+    <!-- 获取用户收藏的博客ID列表（分页，按收藏夹标签名筛选） -->
+    <select id="findBlogIdsByUserIdAndTagName" resultType="java.lang.Long">
+        SELECT f.blog_id 
         FROM favorite f
-        INNER JOIN blog_tag bt ON f.blog_id = bt.blog_id
-        INNER JOIN tag t ON bt.tag_id = t.id
         WHERE f.user_id = #{userId}
-        GROUP BY t.id, t.name
+        <if test="tagName != null and tagName != ''">
+            AND f.tag_name = #{tagName}
+        </if>
+        ORDER BY f.create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 获取用户收藏总数（按收藏夹标签名筛选） -->
+    <select id="countByUserIdAndTagName" resultType="java.lang.Long">
+        SELECT COUNT(*) 
+        FROM favorite f
+        WHERE f.user_id = #{userId}
+        <if test="tagName != null and tagName != ''">
+            AND f.tag_name = #{tagName}
+        </if>
+    </select>
+
+    <!-- 获取用户收藏夹标签列表及对应收藏数量 -->
+    <select id="findTagsWithCountByUserId" resultMap="FavoriteTagResultMap">
+        SELECT NULL as id, f.tag_name as name, COUNT(*) as count
+        FROM favorite f
+        WHERE f.user_id = #{userId}
+        GROUP BY f.tag_name
         ORDER BY count DESC
     </select>
 

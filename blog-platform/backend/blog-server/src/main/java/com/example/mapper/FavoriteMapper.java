@@ -27,7 +27,7 @@ public interface FavoriteMapper {
     void deleteByUserIdAndBlogId(@Param("userId") Long userId, @Param("blogId") Long blogId);
     
     /**
-     * 获取用户收藏的博客ID列表（分页）
+     * 获取用户收藏的博客ID列表（分页，按博客标签筛选）
      */
     List<Long> findBlogIdsByUserId(@Param("userId") Long userId, 
                                     @Param("tagId") Long tagId,
@@ -35,12 +35,25 @@ public interface FavoriteMapper {
                                     @Param("size") Integer size);
     
     /**
-     * 获取用户收藏总数
+     * 获取用户收藏总数（按博客标签筛选）
      */
     Long countByUserId(@Param("userId") Long userId, @Param("tagId") Long tagId);
     
     /**
-     * 获取用户收藏的博客所包含的标签列表及对应收藏数量
+     * 获取用户收藏的博客ID列表（分页，按收藏夹标签名筛选）
+     */
+    List<Long> findBlogIdsByUserIdAndTagName(@Param("userId") Long userId, 
+                                              @Param("tagName") String tagName,
+                                              @Param("offset") Integer offset, 
+                                              @Param("size") Integer size);
+    
+    /**
+     * 获取用户收藏总数（按收藏夹标签名筛选）
+     */
+    Long countByUserIdAndTagName(@Param("userId") Long userId, @Param("tagName") String tagName);
+    
+    /**
+     * 获取用户收藏夹标签列表及对应收藏数量
      */
     List<FavoriteTagVO> findTagsWithCountByUserId(@Param("userId") Long userId);
 }

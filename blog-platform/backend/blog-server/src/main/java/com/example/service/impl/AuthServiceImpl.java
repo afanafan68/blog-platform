@@ -2,9 +2,11 @@
 package com.example.service.impl;
 
 import com.example.Utils.JwtUtils;
+import com.example.mapper.FavoriteFolderMapper;
 import com.example.mapper.UserMapper;
 import com.example.pojo.dto.UserLoginDTO;
 import com.example.pojo.dto.UserRegisterDTO;
+import com.example.pojo.entity.FavoriteFolder;
 import com.example.pojo.entity.User;
 import com.example.pojo.vo.LoginVO;
 import com.example.pojo.vo.PrivateUserVO;
@@ -30,11 +32,15 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private UserMapper userMapper;
     @Autowired
+    private FavoriteFolderMapper favoriteFolderMapper;
+    @Autowired
     private JwtProperties jwtProperties;
     @Autowired
     private RedisUtils<String> redisUtils;  // 注入RedisUtils
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
-
+    
+    // 默认收藏夹名称
+    private static final String DEFAULT_FOLDER_NAME = "默认收藏夹";
 
     // Token黑名单的Redis Key前缀
     private static final String TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
@@ -57,6 +63,14 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         userMapper.insert(user);
+        
+        // 为新用户创建默认收藏夹
+        FavoriteFolder defaultFolder = FavoriteFolder.builder()
+                .name(DEFAULT_FOLDER_NAME)
+                .userId(user.getId())
+                .createTime(LocalDateTime.now())
+                .build();
+        favoriteFolderMapper.insert(defaultFolder);
 
         return convertToPrivateUserVO(user);
     }

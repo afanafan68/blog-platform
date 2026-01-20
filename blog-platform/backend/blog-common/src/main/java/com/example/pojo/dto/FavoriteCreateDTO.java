@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class FavoriteCreateDTO {
     private Long blogId;
+    private String tagName;  // 收藏夹标签名，若不传则使用"默认收藏夹"
 }

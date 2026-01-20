@@ -45,10 +45,22 @@
         SELECT * FROM blog WHERE user_id = #{userId} AND status = 1 ORDER BY create_time DESC
     </select>
 
+    <select id="findByUserIdAndStatus" resultMap="BaseResultMap">
+        SELECT * FROM blog 
+        WHERE user_id = #{userId}
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
     <select id="searchByKeyword" resultMap="BaseResultMap">
         SELECT * FROM blog
         WHERE status = 1
           AND (title LIKE CONCAT('%', #{keyword}, '%') OR summary LIKE CONCAT('%', #{keyword}, '%'))
+          <if test="categoryId != null">
+              AND category_id = #{categoryId}
+          </if>
         ORDER BY create_time DESC
     </select>
 

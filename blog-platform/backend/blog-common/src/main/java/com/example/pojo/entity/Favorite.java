@@ -16,5 +16,6 @@ public class Favorite {
     private Long id;
     private Long userId;
     private Long blogId;
+    private String tagName;  // 收藏夹标签名
     private LocalDateTime createTime;
 }

@@ -14,7 +14,7 @@ public interface BlogService {
     Long createBlog(Long userId, BlogCreateDTO createDTO);
     void updateBlog(Long id, Long userId, BlogUpdateDTO updateDTO);
     void deleteBlog(Long id, Long userId);
-    PageResultVO<BlogListVO> searchBlog(String keyword, Integer page, Integer size);
-    PageResultVO<BlogListVO> getUserBlogs(Long userId, Integer page, Integer size);
+    PageResultVO<BlogListVO> searchBlog(String keyword, Integer page, Integer size, Long categoryId);
+    PageResultVO<BlogListVO> getUserBlogs(Long userId, Integer page, Integer size, Integer status);
     void toggleLike(Long blogId, Long userId);
 }

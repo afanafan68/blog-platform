@@ -12,7 +12,8 @@ public interface BlogMapper {
     Blog findById(@Param("id") Long id);
     Page<Blog> findByCondition(BlogQueryDTO queryDTO);
     Page<Blog> findByUserId(@Param("userId") Long userId);
-    Page<Blog> searchByKeyword(@Param("keyword") String keyword);
+    Page<Blog> findByUserIdAndStatus(@Param("userId") Long userId, @Param("status") Integer status);
+    Page<Blog> searchByKeyword(@Param("keyword") String keyword, @Param("categoryId") Long categoryId);
     Integer countByCategoryId(@Param("categoryId") Long categoryId);
     void insert(Blog blog);
     void update(Blog blog);

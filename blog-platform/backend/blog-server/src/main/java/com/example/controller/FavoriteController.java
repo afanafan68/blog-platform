@@ -3,7 +3,9 @@ package com.example.controller;
 
 import com.example.context.BaseContext;
 import com.example.pojo.dto.FavoriteCreateDTO;
+import com.example.pojo.dto.FolderCreateDTO;
 import com.example.pojo.vo.BlogListVO;
+import com.example.pojo.vo.FavoriteFolderVO;
 import com.example.pojo.vo.FavoriteTagVO;
 import com.example.pojo.vo.PageResultVO;
 import com.example.result.Result;
@@ -27,7 +29,7 @@ public class FavoriteController {
     @PostMapping
     public Result<Void> addFavorite(@RequestBody FavoriteCreateDTO createDTO) {
         Long userId = BaseContext.getCurrentId();
-        favoriteService.addFavorite(userId, createDTO.getBlogId());
+        favoriteService.addFavorite(userId, createDTO.getBlogId(), createDTO.getTagName());
         return Result.success("收藏成功");
     }
 
@@ -77,4 +79,41 @@ public class FavoriteController {
         Boolean isFavorited = favoriteService.checkFavorite(userId, blogId);
         return Result.success(isFavorited);
     }
+
+    /**
+     * 创建新的收藏夹
+     * POST /api/favorites/folder
+     */
+    @PostMapping("/folder")
+    public Result<Void> createFolder(@RequestBody FolderCreateDTO createDTO) {
+        Long userId = BaseContext.getCurrentId();
+        favoriteService.createFolder(userId, createDTO.getFolderName());
+        return Result.success();
+    }
+
+    /**
+     * 获取收藏夹列表
+     * GET /api/favorites/folders
+     */
+    @GetMapping("/folders")
+    public Result<List<FavoriteFolderVO>> getFolders() {
+        Long userId = BaseContext.getCurrentId();
+        List<FavoriteFolderVO> folders = favoriteService.getFolders(userId);
+        return Result.success(folders);
+    }
+
+    /**
+     * 根据收藏夹名称获取博客列表
+     * GET /api/favorites/folder/blog
+     */
+    @GetMapping("/folder/blog")
+    public Result<PageResultVO<BlogListVO>> getBlogsByFolderName(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam("folder_name") String folderName) {
+        Long userId = BaseContext.getCurrentId();
+        PageResultVO<BlogListVO> pageResult = favoriteService.getBlogsByFolderName(userId, folderName, page, size);
+        return Result.success(pageResult);
+    }
+
 }

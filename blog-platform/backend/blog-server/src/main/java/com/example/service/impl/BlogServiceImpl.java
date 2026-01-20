@@ -195,9 +195,9 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public PageResultVO<BlogListVO> searchBlog(String keyword, Integer page, Integer size) {
+    public PageResultVO<BlogListVO> searchBlog(String keyword, Integer page, Integer size, Long categoryId) {
         PageHelper.startPage(page, size);
-        Page<Blog> blogPage = blogMapper.searchByKeyword(keyword);
+        Page<Blog> blogPage = blogMapper.searchByKeyword(keyword, categoryId);
 
         List<BlogListVO> records = new ArrayList<>();
         for (Blog blog : blogPage) {
@@ -214,9 +214,9 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    public PageResultVO<BlogListVO> getUserBlogs(Long userId, Integer page, Integer size) {
+    public PageResultVO<BlogListVO> getUserBlogs(Long userId, Integer page, Integer size, Integer status) {
         PageHelper.startPage(page, size);
-        Page<Blog> blogPage = blogMapper.findByUserId(userId);
+        Page<Blog> blogPage = blogMapper.findByUserIdAndStatus(userId, status);
 
         List<BlogListVO> records = new ArrayList<>();
         for (Blog blog : blogPage) {

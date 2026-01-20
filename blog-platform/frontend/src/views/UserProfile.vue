@@ -48,19 +48,19 @@
               <img :src="blog.coverImage" :alt="blog.title" />
             </div>
             <div class="article-content">
-              <div class="article-status">
-                <el-tag :type="blog.status === 1 ? 'success' : 'info'" size="small">
-                  {{ blog.status === 1 ? '已发布' : '草稿' }}
+            <div class="article-status">
+                <el-tag :type="Number(blog.status) === 1 ? 'success' : 'info'" size="small">
+                  {{ Number(blog.status) === 1 ? '已发布' : '草稿' }}
                 </el-tag>
               </div>
               <h3 class="article-title" @click="goToDetail(blog)">{{ blog.title }}</h3>
               <p class="article-summary">{{ blog.summary }}</p>
               <div class="article-meta">
                 <span class="date">{{ formatDate(blog.createTime) }}</span>
-                <span class="views" v-if="blog.status === 1">
+                <span class="views" v-if="Number(blog.status) === 1">
                   <el-icon><View /></el-icon> {{ blog.viewCount }}
                 </span>
-                <span class="likes" v-if="blog.status === 1">
+                <span class="likes" v-if="Number(blog.status) === 1">
                   <el-icon><Star /></el-icon> {{ blog.likeCount }}
                 </span>
               </div>
@@ -169,7 +169,7 @@ const fetchMyBlogs = async () => {
 
 // 跳转详情
 const goToDetail = (blog) => {
-  if (blog.status === 1) {
+  if (Number(blog.status) === 1) {
     router.push(`/blog/${blog.id}`)
   } else {
     router.push(`/edit/${blog.id}`)

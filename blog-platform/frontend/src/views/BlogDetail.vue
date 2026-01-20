@@ -150,30 +150,77 @@
     </div>
 
     <!-- 收藏弹窗 -->
-    <el-dialog v-model="favoriteDialogVisible" title="添加到收藏" width="400px">
-      <el-form>
-        <el-form-item label="选择收藏夹">
-          <el-select
-            v-model="favoriteForm.tagName"
-            filterable
-            allow-create
-            default-first-option
-            placeholder="选择或新建收藏夹"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in favoriteTags"
+    <el-dialog v-model="favoriteDialogVisible" title="添加到收藏" width="420px">
+      <div class="favorite-dialog-content">
+        <!-- 现有收藏夹列表 -->
+        <div class="favorite-tags-list">
+          <div class="list-header">
+            <span class="list-title">选择收藏夹</span>
+            <el-button 
+              type="primary" 
+              link 
+              :icon="Plus" 
+              @click="showNewTagInput = !showNewTagInput"
+            >
+              {{ showNewTagInput ? '取消' : '新建收藏夹' }}
+            </el-button>
+          </div>
+          
+          <!-- 新建收藏夹输入框 -->
+          <div class="new-tag-input" v-if="showNewTagInput">
+            <el-input
+              v-model="newTagName"
+              placeholder="输入新收藏夹名称"
+              maxlength="20"
+              show-word-limit
+              @keyup.enter="createNewTag"
+            >
+              <template #append>
+                <el-button :icon="Check" @click="createNewTag" />
+              </template>
+            </el-input>
+          </div>
+          
+          <!-- 收藏夹选项列表 -->
+          <div class="tag-options">
+            <div 
+              v-for="item in favoriteTags" 
               :key="item.id || item.name"
-              :label="item.name"
-              :value="item.name"
-            />
-          </el-select>
-        </el-form-item>
-      </el-form>
+              class="tag-option"
+              :class="{ active: favoriteForm.tagName === item.name }"
+              @click="favoriteForm.tagName = item.name"
+            >
+              <el-icon class="tag-icon"><Folder /></el-icon>
+              <span class="tag-name">{{ item.name }}</span>
+              <span class="tag-count">{{ item.count || 0 }} 篇</span>
+              <el-icon v-if="favoriteForm.tagName === item.name" class="check-icon"><Check /></el-icon>
+            </div>
+            
+            <!-- 默认收藏夹（如果列表为空） -->
+            <div 
+              v-if="favoriteTags.length === 0"
+              class="tag-option active"
+              @click="favoriteForm.tagName = '默认收藏夹'"
+            >
+              <el-icon class="tag-icon"><Folder /></el-icon>
+              <span class="tag-name">默认收藏夹</span>
+              <span class="tag-count">0 篇</span>
+              <el-icon class="check-icon"><Check /></el-icon>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 当前选择提示 -->
+        <div class="selected-hint" v-if="favoriteForm.tagName">
+          将收藏到：<el-tag type="primary" size="small">{{ favoriteForm.tagName }}</el-tag>
+        </div>
+      </div>
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="favoriteDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="confirmFavorite">确定</el-button>
+          <el-button type="primary" @click="confirmFavorite" :disabled="!favoriteForm.tagName">
+            确定收藏
+          </el-button>
         </span>
       </template>
     </el-dialog>
@@ -184,7 +231,7 @@
 import { addFavorite, checkFavorite, deleteBlog, getBlogDetail, getFavoriteTags, likeBlog, removeFavorite } from '@/api/blog'
 import { createComment, deleteComment, getComments, likeComment } from '@/api/comment'
 import { useUserStore } from '@/stores/user'
-import { ChatDotRound, Pointer, Star, StarFilled, View } from '@element-plus/icons-vue'
+import { ChatDotRound, Check, Folder, Plus, Pointer, Star, StarFilled, View } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
@@ -204,6 +251,8 @@ const isFavorited = ref(false)
 const favoriteDialogVisible = ref(false)
 const favoriteTags = ref([])
 const favoriteForm = reactive({ tagName: '默认收藏夹' })
+const showNewTagInput = ref(false)
+const newTagName = ref('')
 const commentContent = ref('')
 const submittingComment = ref(false)
 
@@ -299,9 +348,38 @@ const fetchFavoriteTags = async () => {
   try {
     const res = await getFavoriteTags()
     favoriteTags.value = res.data || []
+    // 如果有收藏夹，默认选中第一个
+    if (favoriteTags.value.length > 0) {
+      favoriteForm.tagName = favoriteTags.value[0].name
+    } else {
+      favoriteForm.tagName = '默认收藏夹'
+    }
   } catch (error) {
     console.error('Fetch tags failed', error)
   }
+}
+
+// 创建新收藏夹标签
+const createNewTag = () => {
+  if (!newTagName.value.trim()) {
+    ElMessage.warning('请输入收藏夹名称')
+    return
+  }
+  
+  // 检查是否已存在
+  const exists = favoriteTags.value.some(tag => tag.name === newTagName.value.trim())
+  if (exists) {
+    ElMessage.warning('该收藏夹已存在')
+    return
+  }
+  
+  // 添加到列表并选中
+  const newTag = { name: newTagName.value.trim(), count: 0 }
+  favoriteTags.value.unshift(newTag)
+  favoriteForm.tagName = newTag.name
+  newTagName.value = ''
+  showNewTagInput.value = false
+  ElMessage.success('收藏夹创建成功')
 }
 
 // 确认收藏
@@ -649,5 +727,90 @@ onMounted(() => {
 .not-found {
   padding: $spacing-3xl 0;
   text-align: center;
+}
+
+// 收藏弹窗样式
+.favorite-dialog-content {
+  .favorite-tags-list {
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-md;
+      
+      .list-title {
+        font-weight: 600;
+        color: $text-primary;
+      }
+    }
+    
+    .new-tag-input {
+      margin-bottom: $spacing-md;
+    }
+    
+    .tag-options {
+      max-height: 240px;
+      overflow-y: auto;
+      border: 1px solid $border-color;
+      border-radius: $radius-md;
+      
+      .tag-option {
+        display: flex;
+        align-items: center;
+        padding: $spacing-sm $spacing-md;
+        cursor: pointer;
+        transition: all $transition-fast;
+        border-bottom: 1px solid $border-color;
+        
+        &:last-child {
+          border-bottom: none;
+        }
+        
+        &:hover {
+          background-color: $bg-secondary;
+        }
+        
+        &.active {
+          background-color: rgba($color-primary, 0.1);
+          
+          .tag-name {
+            color: $color-primary;
+            font-weight: 600;
+          }
+        }
+        
+        .tag-icon {
+          margin-right: $spacing-sm;
+          color: $text-tertiary;
+          font-size: 18px;
+        }
+        
+        .tag-name {
+          flex: 1;
+          color: $text-primary;
+        }
+        
+        .tag-count {
+          color: $text-tertiary;
+          font-size: $font-size-sm;
+          margin-right: $spacing-sm;
+        }
+        
+        .check-icon {
+          color: $color-primary;
+          font-size: 16px;
+        }
+      }
+    }
+  }
+  
+  .selected-hint {
+    margin-top: $spacing-md;
+    padding: $spacing-sm $spacing-md;
+    background-color: $bg-secondary;
+    border-radius: $radius-sm;
+    font-size: $font-size-sm;
+    color: $text-secondary;
+  }
 }
 </style>

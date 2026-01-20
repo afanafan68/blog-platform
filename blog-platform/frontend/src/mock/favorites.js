@@ -1,23 +1,39 @@
 // src/mock/favorites.js - 收藏模块 Mock 数据
 import Mock from 'mockjs'
 
-// 收藏标签列表
-const favoritesTags = [
-  { id: 1, name: '前端', count: 3 },
-  { id: 2, name: '编译原理', count: 2 },
-  { id: 3, name: '操作系统', count: 1 },
-  { id: 4, name: 'mysql', count: 2 },
-  { id: 5, name: 'HarmonyOS', count: 1 },
-  { id: 6, name: '数据结构', count: 2 },
-  { id: 7, name: 'C++', count: 1 },
-  { id: 8, name: 'Java', count: 3 },
-  { id: 9, name: '深度学习', count: 2 },
-  { id: 10, name: '计算机视觉', count: 2 },
-  { id: 11, name: 'conda', count: 1 },
-  { id: 12, name: 'html', count: 1 },
-  { id: 13, name: 'python', count: 2 },
-  { id: 14, name: '默认收藏夹', count: 3 }
+// 收藏夹数据表模拟（包含用户主键、收藏文件夹主键、收藏文件夹名字）
+// 这个数据结构模拟后端的 favorite_folder 表
+let favoriteFolders = [
+  { id: 1, userId: 1, name: '前端', createTime: '2026-01-10T10:00:00' },
+  { id: 2, userId: 1, name: '编译原理', createTime: '2026-01-09T10:00:00' },
+  { id: 3, userId: 1, name: '操作系统', createTime: '2026-01-08T10:00:00' },
+  { id: 4, userId: 1, name: 'mysql', createTime: '2026-01-07T10:00:00' },
+  { id: 5, userId: 1, name: 'HarmonyOS', createTime: '2026-01-06T10:00:00' },
+  { id: 6, userId: 1, name: '数据结构', createTime: '2026-01-05T10:00:00' },
+  { id: 7, userId: 1, name: 'C++', createTime: '2026-01-04T10:00:00' },
+  { id: 8, userId: 1, name: 'Java', createTime: '2026-01-03T10:00:00' },
+  { id: 9, userId: 1, name: '深度学习', createTime: '2026-01-02T10:00:00' },
+  { id: 10, userId: 1, name: '计算机视觉', createTime: '2026-01-01T10:00:00' },
+  { id: 11, userId: 1, name: 'conda', createTime: '2025-12-31T10:00:00' },
+  { id: 12, userId: 1, name: 'html', createTime: '2025-12-30T10:00:00' },
+  { id: 13, userId: 1, name: 'python', createTime: '2025-12-29T10:00:00' },
+  { id: 14, userId: 1, name: '默认收藏夹', createTime: '2025-12-01T10:00:00' }
 ]
+
+// 下一个收藏夹ID
+let nextFolderId = 15
+
+// 收藏标签列表（从收藏夹数据动态计算）
+const getFavoritesTags = () => {
+  return favoriteFolders.map(folder => {
+    const count = favoritesBlogs.filter(blog => blog.favoriteTag === folder.name).length
+    return {
+      id: folder.id,
+      name: folder.name,
+      count: count
+    }
+  }).filter(tag => tag.count > 0 || tag.name === '默认收藏夹')
+}
 
 // 收藏的博客数据（基于资料提供.md中的真实内容）
 const favoritesBlogs = [
@@ -436,12 +452,219 @@ function Counter() {
   }
 ]
 
-// 获取收藏标签列表
+// 收藏的博客数据（可变数组，支持添加/删除）
+let userFavoritesBlogs = [...favoritesBlogs]
+
+// 下一个收藏记录ID
+let nextFavoriteId = 2000
+
+// ------------------------------------------------------
+// Mock API 定义
+// ------------------------------------------------------
+
+// 获取收藏标签列表（收藏夹列表）
 Mock.mock(/\/api\/favorites\/tags/, 'get', () => {
+  const tags = getFavoritesTags()
   return {
     code: 200,
     message: 'success',
-    data: favoritesTags
+    data: tags
+  }
+})
+
+// 获取收藏夹列表（带详细信息）
+Mock.mock(/\/api\/favorites\/folders/, 'get', () => {
+  const folders = favoriteFolders.map(folder => {
+    const count = userFavoritesBlogs.filter(blog => blog.favoriteTag === folder.name).length
+    return {
+      id: folder.id,
+      userId: folder.userId,
+      name: folder.name,
+      count: count,
+      createTime: folder.createTime
+    }
+  })
+  return {
+    code: 200,
+    message: 'success',
+    data: folders
+  }
+})
+
+// 创建收藏夹
+Mock.mock(/\/api\/favorites\/folder$/, 'post', (options) => {
+  const body = JSON.parse(options.body)
+  const name = body.name
+  
+  // 检查是否已存在
+  const exists = favoriteFolders.some(f => f.name === name)
+  if (exists) {
+    return {
+      code: 400,
+      message: '收藏夹已存在',
+      data: null
+    }
+  }
+  
+  // 创建新收藏夹
+  const newFolder = {
+    id: nextFolderId++,
+    userId: 1, // 模拟当前用户ID
+    name: name,
+    createTime: new Date().toISOString()
+  }
+  favoriteFolders.push(newFolder)
+  
+  return {
+    code: 200,
+    message: '创建成功',
+    data: newFolder
+  }
+})
+
+// 删除收藏夹
+Mock.mock(/\/api\/favorites\/folder\/\d+/, 'delete', (options) => {
+  const folderId = parseInt(options.url.match(/\/folder\/(\d+)/)[1])
+  const index = favoriteFolders.findIndex(f => f.id === folderId)
+  
+  if (index === -1) {
+    return {
+      code: 404,
+      message: '收藏夹不存在',
+      data: null
+    }
+  }
+  
+  // 获取收藏夹名称，用于移除相关收藏
+  const folderName = favoriteFolders[index].name
+  
+  // 删除收藏夹
+  favoriteFolders.splice(index, 1)
+  
+  // 将该收藏夹下的博客移动到默认收藏夹
+  userFavoritesBlogs.forEach(blog => {
+    if (blog.favoriteTag === folderName) {
+      blog.favoriteTag = '默认收藏夹'
+    }
+  })
+  
+  return {
+    code: 200,
+    message: '删除成功',
+    data: null
+  }
+})
+
+// 重命名收藏夹
+Mock.mock(/\/api\/favorites\/folder\/\d+/, 'put', (options) => {
+  const folderId = parseInt(options.url.match(/\/folder\/(\d+)/)[1])
+  const body = JSON.parse(options.body)
+  const newName = body.name
+  
+  const folder = favoriteFolders.find(f => f.id === folderId)
+  if (!folder) {
+    return {
+      code: 404,
+      message: '收藏夹不存在',
+      data: null
+    }
+  }
+  
+  // 检查新名称是否已存在
+  const exists = favoriteFolders.some(f => f.name === newName && f.id !== folderId)
+  if (exists) {
+    return {
+      code: 400,
+      message: '收藏夹名称已存在',
+      data: null
+    }
+  }
+  
+  const oldName = folder.name
+  folder.name = newName
+  
+  // 更新相关收藏的标签
+  userFavoritesBlogs.forEach(blog => {
+    if (blog.favoriteTag === oldName) {
+      blog.favoriteTag = newName
+    }
+  })
+  
+  return {
+    code: 200,
+    message: '重命名成功',
+    data: folder
+  }
+})
+
+// 添加收藏（支持 tagName 参数）
+Mock.mock(/\/api\/favorites$/, 'post', (options) => {
+  const body = JSON.parse(options.body)
+  const blogId = body.blogId
+  const tagName = body.tagName || '默认收藏夹'
+  
+  // 检查是否已收藏
+  const exists = userFavoritesBlogs.some(b => b.id === blogId)
+  if (exists) {
+    return {
+      code: 400,
+      message: '已经收藏过了',
+      data: null
+    }
+  }
+  
+  // 检查收藏夹是否存在，不存在则创建
+  let folder = favoriteFolders.find(f => f.name === tagName)
+  if (!folder) {
+    folder = {
+      id: nextFolderId++,
+      userId: 1,
+      name: tagName,
+      createTime: new Date().toISOString()
+    }
+    favoriteFolders.push(folder)
+  }
+  
+  // 模拟添加收藏（这里简化处理，实际需要从博客列表获取完整信息）
+  const newFavorite = {
+    id: nextFavoriteId++,
+    blogId: blogId,
+    favoriteTag: tagName,
+    createTime: new Date().toISOString()
+  }
+  
+  return {
+    code: 200,
+    message: '收藏成功',
+    data: null
+  }
+})
+
+// 取消收藏
+Mock.mock(/\/api\/favorites\/\d+/, 'delete', (options) => {
+  const blogId = parseInt(options.url.match(/\/favorites\/(\d+)/)[1])
+  const index = userFavoritesBlogs.findIndex(b => b.id === blogId)
+  
+  if (index !== -1) {
+    userFavoritesBlogs.splice(index, 1)
+  }
+  
+  return {
+    code: 200,
+    message: '取消收藏成功',
+    data: null
+  }
+})
+
+// 检查是否已收藏
+Mock.mock(/\/api\/favorites\/check\/\d+/, 'get', (options) => {
+  const blogId = parseInt(options.url.match(/\/check\/(\d+)/)[1])
+  const isFavorited = userFavoritesBlogs.some(b => b.id === blogId)
+  
+  return {
+    code: 200,
+    message: 'success',
+    data: isFavorited
   }
 })
 
@@ -452,11 +675,11 @@ Mock.mock(/\/api\/favorites\/list/, 'get', (options) => {
   const size = parseInt(url.searchParams.get('size')) || 10
   const tagName = url.searchParams.get('tag') || ''
 
-  let filteredBlogs = favoritesBlogs
+  let filteredBlogs = userFavoritesBlogs
   
   // 按标签筛选
   if (tagName && tagName !== '全部') {
-    filteredBlogs = favoritesBlogs.filter(blog => blog.favoriteTag === tagName)
+    filteredBlogs = userFavoritesBlogs.filter(blog => blog.favoriteTag === tagName)
   }
 
   // 分页
@@ -477,5 +700,5 @@ Mock.mock(/\/api\/favorites\/list/, 'get', (options) => {
   }
 })
 
-export { favoritesBlogs, favoritesTags }
+export { favoriteFolders, favoritesBlogs, getFavoritesTags }
 

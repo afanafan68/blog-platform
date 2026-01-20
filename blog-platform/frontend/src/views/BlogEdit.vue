@@ -124,6 +124,7 @@
 import { createBlog, getBlogDetail, updateBlog } from '@/api/blog'
 import { getCategories } from '@/api/category'
 import { getTags } from '@/api/tag'
+import { uploadBlogCover } from '@/api/upload'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
@@ -298,8 +299,8 @@ const triggerFileInput = () => {
   fileInputRef.value?.click()
 }
 
-// 处理文件选择
-const handleFileChange = (event) => {
+// 处理文件选择 - 上传博客封面图片
+const handleFileChange = async (event) => {
   const file = event.target.files?.[0]
   if (!file) return
 
@@ -309,22 +310,25 @@ const handleFileChange = (event) => {
     return
   }
 
-  // 验证文件大小（最大2MB）
-  if (file.size > 2 * 1024 * 1024) {
-    ElMessage.warning('图片大小不能超过2MB')
+  // 验证文件大小（最大5MB）
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.warning('图片大小不能超过5MB')
     return
   }
 
-  // 使用 FileReader 读取文件并转为 base64（本地预览）
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    form.coverImage = e.target?.result
-    ElMessage.success('图片上传成功')
+  // 调用上传API
+  try {
+    const res = await uploadBlogCover(file)
+    if (res.code === 200) {
+      form.coverImage = res.data  // 服务器返回的图片URL
+      ElMessage.success('封面上传成功')
+    } else {
+      ElMessage.error(res.msg || '上传失败')
+    }
+  } catch (error) {
+    console.error('Upload error:', error)
+    ElMessage.error('封面上传失败，请重试')
   }
-  reader.onerror = () => {
-    ElMessage.error('图片读取失败')
-  }
-  reader.readAsDataURL(file)
 
   // 清空 input 以便重复选择同一文件
   event.target.value = ''

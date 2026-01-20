@@ -4,14 +4,14 @@
 import request from './index'
 
 /**
- * 上传图片（通用）
- * POST /api/upload/image
+ * 上传博客封面图片
+ * POST /api/blog/cover
  * @param {File} file - 图片文件
  */
-export function uploadImage(file) {
+export function uploadBlogCover(file) {
   const formData = new FormData()
   formData.append('file', file)
-  return request.post('/upload/image', formData, {
+  return request.post('/blog/cover', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }

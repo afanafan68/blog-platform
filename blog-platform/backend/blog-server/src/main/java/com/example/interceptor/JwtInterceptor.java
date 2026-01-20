@@ -21,11 +21,31 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // OPTIONS 请求直接放行（CORS预检）
         if ("OPTIONS".equals(request.getMethod())) {
             return true;
         }
 
         String token = request.getHeader("Authorization");
+        
+        // GET 请求：如果有 token 则解析，没有则放行（用于公开接口）
+        if ("GET".equals(request.getMethod())) {
+            if (token != null && token.startsWith("Bearer ")) {
+                try {
+                    String pureToken = token.substring(7);
+                    if (!authService.isTokenBlacklisted(pureToken)) {
+                        Claims claims = JwtUtils.parseJwt(pureToken, jwtProperties.getSecretKey());
+                        Long userId = Long.valueOf(claims.get(jwtProperties.getDataName()).toString());
+                        BaseContext.setCurrentId(userId);
+                    }
+                } catch (Exception e) {
+                    // GET 请求 token 解析失败时不阻止请求，只是不设置用户信息
+                }
+            }
+            return true;
+        }
+
+        // 非 GET 请求必须携带有效 token
         if (token == null || !token.startsWith("Bearer ")) {
             response.setStatus(401);
             return false;

@@ -25,6 +25,7 @@ mybatis:
 sky:
   jwt:
     # jwt签名加密密钥
+    secret-key: blog-platform-jwt-secret-key-2024
     # jwt过期时间
     ttl: 43200000
     # 前端传递令牌名称

@@ -6,8 +6,8 @@
     </div>
     <div class="card-content">
       <div class="card-meta">
-        <span class="category" v-if="blog.categoryName">{{ blog.categoryName }}</span>
-        <span class="date">{{ formatDate(blog.createdAt) }}</span>
+        <span class="category" v-if="blog.category?.name">{{ blog.category.name }}</span>
+        <span class="date">{{ formatDate(blog.createTime) }}</span>
       </div>
       <h2 class="card-title">{{ blog.title }}</h2>
       <p class="card-summary">{{ blog.summary }}</p>

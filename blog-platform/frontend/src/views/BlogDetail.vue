@@ -5,10 +5,10 @@
       <!-- 文章头部 -->
       <header class="article-header">
         <div class="article-meta">
-          <el-tag v-if="blog.categoryName" type="info" size="small">
-            {{ blog.categoryName }}
+          <el-tag v-if="blog.category?.name" type="info" size="small">
+            {{ blog.category.name }}
           </el-tag>
-          <span class="date">{{ formatDate(blog.createdAt) }}</span>
+          <span class="date">{{ formatDate(blog.createTime) }}</span>
           <span class="views">
             <el-icon><View /></el-icon>
             {{ blog.viewCount }} 阅读
@@ -114,7 +114,7 @@
             <div class="comment-body">
               <div class="comment-header">
                 <span class="comment-author">{{ comment.user?.nickname || '匿名用户' }}</span>
-                <span class="comment-time">{{ formatDate(comment.createdAt) }}</span>
+                <span class="comment-time">{{ formatDate(comment.createTime) }}</span>
               </div>
               <p class="comment-content">{{ comment.content }}</p>
               <div class="comment-actions">

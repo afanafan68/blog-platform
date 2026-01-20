@@ -72,7 +72,7 @@
                   </el-avatar>
                   {{ blog.author?.nickname || '匿名' }}
                 </span>
-                <span class="date">{{ formatDate(blog.createdAt) }}</span>
+                <span class="date">{{ formatDate(blog.createTime) }}</span>
                 <span class="views">
                   <el-icon><View /></el-icon>
                   {{ blog.viewCount || 0 }}

@@ -53,17 +53,21 @@
       <div class="article-actions">
         <el-button
           :type="isLiked ? 'primary' : 'default'"
-          :icon="StarFilled"
+          :icon="ThumbsUp"
           round
           @click="handleLike"
         >
           {{ isLiked ? '已点赞' : '点赞' }} {{ blog.likeCount }}
         </el-button>
 
-        <template v-if="isAuthor">
-          <el-button :icon="Edit" round @click="handleEdit">编辑</el-button>
-          <el-button :icon="Delete" type="danger" round plain @click="handleDelete">删除</el-button>
-        </template>
+        <el-button
+          :type="isFavorited ? 'warning' : 'default'"
+          :icon="isFavorited ? StarFilled : Star"
+          round
+          @click="handleFavoriteClick"
+        >
+          {{ isFavorited ? '已收藏' : '收藏' }}
+        </el-button>
       </div>
 
       <el-divider />
@@ -144,19 +148,48 @@
         <el-button type="primary" @click="router.push('/')">返回首页</el-button>
       </el-empty>
     </div>
+
+    <!-- 收藏弹窗 -->
+    <el-dialog v-model="favoriteDialogVisible" title="添加到收藏" width="400px">
+      <el-form>
+        <el-form-item label="选择收藏夹">
+          <el-select
+            v-model="favoriteForm.tagName"
+            filterable
+            allow-create
+            default-first-option
+            placeholder="选择或新建收藏夹"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in favoriteTags"
+              :key="item.id || item.name"
+              :label="item.name"
+              :value="item.name"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="favoriteDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmFavorite">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { deleteBlog, getBlogDetail, likeBlog } from '@/api/blog'
+import { addFavorite, checkFavorite, deleteBlog, getBlogDetail, getFavoriteTags, likeBlog, removeFavorite } from '@/api/blog'
 import { createComment, deleteComment, getComments, likeComment } from '@/api/comment'
 import { useUserStore } from '@/stores/user'
-import { ChatDotRound, Delete, Edit, Star, StarFilled, View } from '@element-plus/icons-vue'
+import { ChatDotRound, Star, StarFilled, ThumbsUp, View } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -167,6 +200,10 @@ const loading = ref(true)
 const blog = ref(null)
 const comments = ref([])
 const isLiked = ref(false)
+const isFavorited = ref(false)
+const favoriteDialogVisible = ref(false)
+const favoriteTags = ref([])
+const favoriteForm = reactive({ tagName: '默认收藏夹' })
 const commentContent = ref('')
 const submittingComment = ref(false)
 
@@ -187,10 +224,24 @@ const fetchBlogDetail = async () => {
     const res = await getBlogDetail(route.params.id)
     blog.value = res.data
     isLiked.value = res.data.isLiked || false
+    // 检查收藏状态
+    if (userStore.isLoggedIn) {
+      checkFavoriteStatus()
+    }
   } catch (error) {
     blog.value = null
   } finally {
     loading.value = false
+  }
+}
+
+// 检查收藏状态
+const checkFavoriteStatus = async () => {
+  try {
+    const res = await checkFavorite(route.params.id)
+    isFavorited.value = res.data
+  } catch (error) {
+    console.error('Check favorite failed', error)
   }
 }
 
@@ -220,9 +271,57 @@ const handleLike = async () => {
   }
 }
 
-// 编辑文章
-const handleEdit = () => {
-  router.push(`/edit/${blog.value.id}`)
+// 处理收藏点击
+const handleFavoriteClick = async () => {
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  if (isFavorited.value) {
+    // 取消收藏
+    try {
+      await removeFavorite(blog.value.id)
+      isFavorited.value = false
+      ElMessage.success('已取消收藏')
+    } catch (error) {
+      ElMessage.error('操作失败')
+    }
+  } else {
+    // 打开收藏弹窗
+    fetchFavoriteTags()
+    favoriteDialogVisible.value = true
+  }
+}
+
+// 获取收藏标签
+const fetchFavoriteTags = async () => {
+  try {
+    const res = await getFavoriteTags()
+    favoriteTags.value = res.data || []
+  } catch (error) {
+    console.error('Fetch tags failed', error)
+  }
+}
+
+// 确认收藏
+const confirmFavorite = async () => {
+  if (!favoriteForm.tagName) {
+    ElMessage.warning('请输入或选择收藏夹')
+    return
+  }
+  
+  try {
+    await addFavorite({
+      blogId: blog.value.id,
+      tagName: favoriteForm.tagName
+    })
+    isFavorited.value = true
+    favoriteDialogVisible.value = false
+    ElMessage.success('收藏成功')
+  } catch (error) {
+    ElMessage.error('收藏失败')
+  }
 }
 
 // 删除文章

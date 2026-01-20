@@ -117,13 +117,6 @@
 
             <el-divider />
 
-            <div class="security-item danger">
-              <div class="security-info">
-                <h3>注销账号</h3>
-                <p>注销后账号将无法恢复，请谨慎操作</p>
-              </div>
-              <el-button type="danger" plain @click="handleDeleteAccount">注销账号</el-button>
-            </div>
           </div>
         </el-tab-pane>
       </el-tabs>
@@ -132,12 +125,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { useUserStore } from '@/stores/user'
-import { updateProfile, updatePassword, deleteAccount } from '@/api/user'
 import { uploadImage } from '@/api/upload'
+import { updatePassword, updateProfile } from '@/api/user'
+import { useUserStore } from '@/stores/user'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -268,40 +261,6 @@ const handleLogout = async () => {
     await userStore.doLogout()
     ElMessage.success('已退出登录')
     router.push('/')
-  } catch (error) {
-    // 用户取消操作，不做处理
-  }
-}
-
-// 注销账号
-const handleDeleteAccount = async () => {
-  try {
-    await ElMessageBox.prompt(
-      '请输入您的密码以确认注销账号。注销后所有数据将被删除且无法恢复！',
-      '危险操作',
-      {
-        confirmButtonText: '确认注销',
-        cancelButtonText: '取消',
-        inputType: 'password',
-        inputPlaceholder: '请输入密码',
-        inputValidator: (value) => {
-          if (!value) {
-            return '请输入密码'
-          }
-          return true
-        },
-        type: 'error'
-      }
-    ).then(async ({ value: password }) => {
-      try {
-        await deleteAccount({ password })
-        ElMessage.success('账号已注销')
-        await userStore.doLogout()
-        router.push('/')
-      } catch (error) {
-        ElMessage.error(error.message || '注销失败，请检查密码是否正确')
-      }
-    })
   } catch (error) {
     // 用户取消操作，不做处理
   }

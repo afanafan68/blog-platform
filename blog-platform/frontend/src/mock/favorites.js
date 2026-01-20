@@ -478,3 +478,4 @@ Mock.mock(/\/api\/favorites\/list/, 'get', (options) => {
 })
 
 export { favoritesBlogs, favoritesTags }
+

@@ -82,3 +82,42 @@ export function getUserBlogs(userId, params) {
 export function likeBlog(id) {
   return request.post(`/blog/${id}/like`)
 }
+
+// ------------------------------------------------------
+// 收藏相关API
+// ------------------------------------------------------
+
+/**
+ * 添加收藏
+ * POST /api/favorites
+ * @param {Object} data - { blogId, tagName }
+ */
+export function addFavorite(data) {
+  return request.post('/favorites', data)
+}
+
+/**
+ * 取消收藏
+ * DELETE /api/favorites/{blogId}
+ * @param {number} blogId
+ */
+export function removeFavorite(blogId) {
+  return request.delete(`/favorites/${blogId}`)
+}
+
+/**
+ * 获取收藏标签列表
+ * GET /api/favorites/tags
+ */
+export function getFavoriteTags() {
+  return request.get('/favorites/tags')
+}
+
+/**
+ * 检查是否已收藏
+ * GET /api/favorites/check/{blogId}
+ * @param {number} blogId
+ */
+export function checkFavorite(blogId) {
+  return request.get(`/favorites/check/${blogId}`)
+}

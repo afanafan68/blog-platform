@@ -53,7 +53,7 @@
       <div class="article-actions">
         <el-button
           :type="isLiked ? 'primary' : 'default'"
-          :icon="ThumbsUp"
+          :icon="Pointer"
           round
           @click="handleLike"
         >
@@ -184,7 +184,7 @@
 import { addFavorite, checkFavorite, deleteBlog, getBlogDetail, getFavoriteTags, likeBlog, removeFavorite } from '@/api/blog'
 import { createComment, deleteComment, getComments, likeComment } from '@/api/comment'
 import { useUserStore } from '@/stores/user'
-import { ChatDotRound, Star, StarFilled, ThumbsUp, View } from '@element-plus/icons-vue'
+import { ChatDotRound, Pointer, Star, StarFilled, View } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { MdPreview } from 'md-editor-v3'

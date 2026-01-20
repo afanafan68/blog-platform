@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.BlogLikeMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pojo.entity.BlogLike">
+        <id column="id" property="id"/>
+        <result column="blog_id" property="blogId"/>
+        <result column="user_id" property="userId"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findByBlogIdAndUserId" resultMap="BaseResultMap">
+        SELECT * FROM blog_like WHERE blog_id = #{blogId} AND user_id = #{userId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO blog_like (blog_id, user_id, create_time)
+        VALUES (#{blogId}, #{userId}, #{createTime})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM blog_like WHERE id = #{id}
+    </delete>
+
+</mapper>

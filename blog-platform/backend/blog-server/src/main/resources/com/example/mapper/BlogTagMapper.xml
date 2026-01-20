@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.BlogTagMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pojo.entity.BlogTag">
+        <id column="id" property="id"/>
+        <result column="blog_id" property="blogId"/>
+        <result column="tag_id" property="tagId"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO blog_tag (blog_id, tag_id) VALUES (#{blogId}, #{tagId})
+    </insert>
+
+    <delete id="deleteByBlogId">
+        DELETE FROM blog_tag WHERE blog_id = #{blogId}
+    </delete>
+
+    <select id="findByBlogId" resultMap="BaseResultMap">
+        SELECT * FROM blog_tag WHERE blog_id = #{blogId}
+    </select>
+
+</mapper>

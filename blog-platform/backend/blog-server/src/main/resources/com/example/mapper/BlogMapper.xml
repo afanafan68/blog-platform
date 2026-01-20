@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.BlogMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pojo.entity.Blog">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="user_id" property="userId"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="like_count" property="likeCount"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM blog WHERE id = #{id}
+    </select>
+
+    <select id="findByCondition" resultMap="BaseResultMap">
+        SELECT DISTINCT b.* FROM blog b
+        <if test="tagId != null">
+            INNER JOIN blog_tag bt ON b.id = bt.blog_id
+        </if>
+        <where>
+            b.status = 1
+            <if test="categoryId != null">
+                AND b.category_id = #{categoryId}
+            </if>
+            <if test="tagId != null">
+                AND bt.tag_id = #{tagId}
+            </if>
+            <if test="userId != null">
+                AND b.user_id = #{userId}
+            </if>
+        </where>
+        ORDER BY b.create_time DESC
+    </select>
+
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT * FROM blog WHERE user_id = #{userId} AND status = 1 ORDER BY create_time DESC
+    </select>
+
+    <select id="searchByKeyword" resultMap="BaseResultMap">
+        SELECT * FROM blog
+        WHERE status = 1
+          AND (title LIKE CONCAT('%', #{keyword}, '%') OR summary LIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="countByCategoryId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM blog WHERE category_id = #{categoryId} AND status = 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO blog (title, content, summary, cover_image, user_id, category_id, view_count, like_count, status, create_time, update_time)
+        VALUES (#{title}, #{content}, #{summary}, #{coverImage}, #{userId}, #{categoryId}, #{viewCount}, #{likeCount}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        UPDATE blog
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM blog WHERE id = #{id}
+    </delete>
+
+    <update id="incrementViewCount">
+        UPDATE blog SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="incrementLikeCount">
+        UPDATE blog SET like_count = like_count + 1 WHERE id = #{id}
+    </update>
+
+    <update id="decrementLikeCount">
+        UPDATE blog SET like_count = like_count - 1 WHERE id = #{id} AND like_count > 0
+    </update>
+
+</mapper>

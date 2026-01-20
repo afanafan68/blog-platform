@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.TagMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pojo.entity.Tag">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <resultMap id="SimpleTagVOResultMap" type="com.example.pojo.vo.SimpleTagVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+    </resultMap>
+
+    <resultMap id="TagVOResultMap" type="com.example.pojo.vo.TagVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="blog_count" property="blogCount"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT * FROM tag WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT * FROM tag ORDER BY id ASC
+    </select>
+
+    <select id="findTagsByBlogId" resultMap="SimpleTagVOResultMap">
+        SELECT t.id, t.name
+        FROM tag t
+                 INNER JOIN blog_tag bt ON t.id = bt.tag_id
+        WHERE bt.blog_id = #{blogId}
+    </select>
+
+    <select id="countBlogsByTagId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM blog_tag WHERE tag_id = #{tagId}
+    </select>
+
+    <select id="findHotTags" resultMap="TagVOResultMap">
+        SELECT t.id, t.name, COUNT(bt.blog_id) as blog_count
+        FROM tag t
+                 LEFT JOIN blog_tag bt ON t.id = bt.tag_id
+        GROUP BY t.id, t.name
+        ORDER BY blog_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO tag (name, create_time, update_time)
+        VALUES (#{name}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        UPDATE tag
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM tag WHERE id = #{id}
+    </delete>
+
+</mapper>

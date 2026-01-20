@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.CommentLikeMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pojo.entity.CommentLike">
+        <id column="id" property="id"/>
+        <result column="comment_id" property="commentId"/>
+        <result column="user_id" property="userId"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findByCommentIdAndUserId" resultMap="BaseResultMap">
+        SELECT * FROM comment_like WHERE comment_id = #{commentId} AND user_id = #{userId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO comment_like (comment_id, user_id, create_time)
+        VALUES (#{commentId}, #{userId}, #{createTime})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM comment_like WHERE id = #{id}
+    </delete>
+
+</mapper>

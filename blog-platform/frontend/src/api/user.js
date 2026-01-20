@@ -46,14 +46,6 @@ export function uploadAvatar(file) {
 }
 
 /**
- * 获取用户统计数据（自定义接口，可选）
- * GET /api/user/stats
- */
-export function getUserStats() {
-  return request.get('/user/stats')
-}
-
-/**
  * 注销账号（自定义接口，可选）
  * POST /api/user/delete
  * @param {Object} data - { password }

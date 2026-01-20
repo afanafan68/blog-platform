@@ -95,7 +95,6 @@
 
 <script setup>
 import { deleteBlog, getUserBlogs } from '@/api/blog'
-import { getUserStats } from '@/api/user'
 import { useUserStore } from '@/stores/user'
 import { Delete, Edit, Star, View } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
@@ -124,13 +123,24 @@ const formatDate = (date) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm')
 }
 
-// 获取用户统计
-const fetchUserStats = async () => {
+// 计算用户统计（从博客列表中统计）
+const calculateStats = (blogList) => {
+  stats.blogCount = blogList.length
+  stats.viewCount = blogList.reduce((sum, blog) => sum + (blog.viewCount || 0), 0)
+  stats.likeCount = blogList.reduce((sum, blog) => sum + (blog.likeCount || 0), 0)
+}
+
+// 获取所有博客用于统计（不分页）
+const fetchAllBlogsForStats = async () => {
   try {
-    const res = await getUserStats()
-    Object.assign(stats, res.data)
+    const res = await getUserBlogs(userStore.userInfo.id, {
+      page: 1,
+      size: 1000  // 获取足够多的数据用于统计
+    })
+    const allBlogs = res.data.records || []
+    calculateStats(allBlogs)
   } catch (error) {
-    console.error('Failed to fetch stats:', error)
+    console.error('Failed to fetch blogs for stats:', error)
   }
 }
 
@@ -183,7 +193,7 @@ const handleDelete = async (id) => {
     await deleteBlog(id)
     ElMessage.success('删除成功')
     fetchMyBlogs()
-    fetchUserStats()
+    fetchAllBlogsForStats()  // 重新计算统计
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败')
@@ -198,7 +208,7 @@ const handlePageChange = (page) => {
 }
 
 onMounted(() => {
-  fetchUserStats()
+  fetchAllBlogsForStats()  // 获取所有博客用于统计
   fetchMyBlogs()
 })
 </script>

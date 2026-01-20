@@ -87,19 +87,6 @@ Mock.mock(/\/api\/user\/avatar/, 'post', () => {
   }
 })
 
-// 获取用户统计
-Mock.mock(/\/api\/user\/stats/, 'get', () => {
-  return {
-    code: 200,
-    message: 'success',
-    data: {
-      blogCount: Random.integer(5, 50),
-      viewCount: Random.integer(1000, 50000),
-      likeCount: Random.integer(100, 5000)
-    }
-  }
-})
-
 // 注销账号
 Mock.mock(/\/api\/user\/delete/, 'post', () => {
   return {

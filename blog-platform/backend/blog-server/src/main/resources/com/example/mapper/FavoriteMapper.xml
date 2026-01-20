@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.mapper.FavoriteMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.pojo.entity.Favorite">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="blog_id" property="blogId"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <resultMap id="FavoriteTagResultMap" type="com.example.pojo.vo.FavoriteTagVO">
+        <result column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="count" property="count"/>
+    </resultMap>
+
+    <!-- 根据用户ID和博客ID查询收藏记录 -->
+    <select id="findByUserIdAndBlogId" resultMap="BaseResultMap">
+        SELECT id, user_id, blog_id, create_time 
+        FROM favorite 
+        WHERE user_id = #{userId} AND blog_id = #{blogId}
+    </select>
+
+    <!-- 插入收藏记录 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO favorite (user_id, blog_id, create_time)
+        VALUES (#{userId}, #{blogId}, #{createTime})
+    </insert>
+
+    <!-- 根据用户ID和博客ID删除收藏记录 -->
+    <delete id="deleteByUserIdAndBlogId">
+        DELETE FROM favorite WHERE user_id = #{userId} AND blog_id = #{blogId}
+    </delete>
+
+    <!-- 获取用户收藏的博客ID列表（分页，支持按标签筛选） -->
+    <select id="findBlogIdsByUserId" resultType="java.lang.Long">
+        SELECT DISTINCT f.blog_id 
+        FROM favorite f
+        <if test="tagId != null">
+            INNER JOIN blog_tag bt ON f.blog_id = bt.blog_id
+        </if>
+        WHERE f.user_id = #{userId}
+        <if test="tagId != null">
+            AND bt.tag_id = #{tagId}
+        </if>
+        ORDER BY f.create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 获取用户收藏总数（支持按标签筛选） -->
+    <select id="countByUserId" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT f.blog_id) 
+        FROM favorite f
+        <if test="tagId != null">
+            INNER JOIN blog_tag bt ON f.blog_id = bt.blog_id
+        </if>
+        WHERE f.user_id = #{userId}
+        <if test="tagId != null">
+            AND bt.tag_id = #{tagId}
+        </if>
+    </select>
+
+    <!-- 获取用户收藏的博客所包含的标签列表及对应收藏数量 -->
+    <select id="findTagsWithCountByUserId" resultMap="FavoriteTagResultMap">
+        SELECT t.id, t.name, COUNT(DISTINCT f.blog_id) as count
+        FROM favorite f
+        INNER JOIN blog_tag bt ON f.blog_id = bt.blog_id
+        INNER JOIN tag t ON bt.tag_id = t.id
+        WHERE f.user_id = #{userId}
+        GROUP BY t.id, t.name
+        ORDER BY count DESC
+    </select>
+
+</mapper>

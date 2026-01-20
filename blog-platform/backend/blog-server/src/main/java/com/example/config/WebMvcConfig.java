@@ -31,7 +31,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/tag/list",
                         "/api/tag/hot",
                         "/api/health",
-                        "/api/ready"
+                        "/api/ready",
+                        "/api/favorites/list",
+                        "/api/favorites/tags",
+                        "/api/favorites/check/{blogId}"
                 );
     }
 }

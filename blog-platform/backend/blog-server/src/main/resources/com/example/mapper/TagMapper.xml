@@ -24,6 +24,10 @@
         SELECT * FROM tag WHERE id = #{id}
     </select>
 
+    <select id="findByName" resultMap="BaseResultMap">
+        SELECT * FROM tag WHERE name = #{name}
+    </select>
+
     <select id="findAll" resultMap="BaseResultMap">
         SELECT * FROM tag ORDER BY id ASC
     </select>

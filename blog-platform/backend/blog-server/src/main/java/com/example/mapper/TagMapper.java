@@ -12,6 +12,7 @@ import java.util.List;
 @Mapper
 public interface TagMapper {
     Tag findById(@Param("id") Long id);
+    Tag findByName(@Param("name") String name);
     List<Tag> findAll();
     List<SimpleTagVO> findTagsByBlogId(@Param("blogId") Long blogId);
     Integer countBlogsByTagId(@Param("tagId") Long tagId);

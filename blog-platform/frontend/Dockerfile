@@ -1,5 +1,6 @@
-# 构建阶段
-FROM node:18-alpine AS builder
+# 多阶段构建 - 前端 Dockerfile
+# 阶段1: 构建阶段
+FROM node:20-bookworm-slim AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -19,8 +20,16 @@ COPY . .
 # 构建项目
 RUN pnpm build
 
-# 生产阶段
-FROM nginx:alpine
+# 阶段2: 生产阶段 - 基于 Debian 的 Nginx
+FROM nginx:stable-bookworm
+
+# 安装 curl 用于健康检查
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 删除默认 nginx 配置
+RUN rm -rf /etc/nginx/conf.d/default.conf
 
 # 复制构建产物到 Nginx 目录
 COPY --from=builder /app/dist /usr/share/nginx/html
@@ -28,8 +37,16 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # 复制 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# 设置正确的权限
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html
+
 # 暴露端口
 EXPOSE 80
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost/health || exit 1
 
 # 启动 Nginx
 CMD ["nginx", "-g", "daemon off;"]

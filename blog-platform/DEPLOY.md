@@ -1,155 +1,229 @@
 # 博客平台 Docker 部署指南
 
+本文档介绍如何使用 Docker 和 Docker Compose 部署博客平台。
+
+## 系统要求
+
+- Docker 20.10+
+- Docker Compose 2.0+
+- 至少 2GB 可用内存
+- 至少 10GB 可用磁盘空间
+
 ## 目录结构
 
 ```
 blog-platform/
-├── docker-compose.yml      # Docker Compose 配置
-├── frontend/
-│   ├── Dockerfile          # 前端 Docker 构建文件
-│   ├── nginx.conf          # Nginx 配置
+├── backend/                 # 后端 Spring Boot 项目
+│   ├── Dockerfile          # 后端 Dockerfile
 │   ├── .dockerignore       # Docker 构建忽略文件
-│   └── ...
-└── backend/                # 后端目录（待创建）
-    └── Dockerfile          # 后端 Docker 构建文件（待创建）
+│   ├── blog-common/        # 公共模块
+│   └── blog-server/        # 服务模块
+├── frontend/               # 前端 Vue.js 项目
+│   ├── Dockerfile          # 前端 Dockerfile
+│   ├── .dockerignore       # Docker 构建忽略文件
+│   └── nginx.conf          # Nginx 配置
+├── init-db/                # 数据库初始化脚本
+│   └── 01-init.sql         # 初始化 SQL
+└── docker-compose.yml      # Docker Compose 配置
 ```
 
-## 快速开始
+## 快速部署
 
-### 1. 前置要求
-
-- 云服务器已安装 Docker 和 Docker Compose
-- 开放端口：80（前端）、8080（后端）
-
-### 2. 部署步骤
+### 1. 克隆项目
 
 ```bash
-# 1. 克隆代码到服务器
 git clone https://github.com/afanafan68/blog-platform.git
-cd blog-platform
+cd blog-platform/blog-platform
+```
 
-# 2. 构建并启动服务
+### 2. 配置环境变量（可选）
+
+如需自定义配置，可以创建 `.env` 文件：
+
+```bash
+# 数据库配置
+MYSQL_ROOT_PASSWORD=your_root_password
+MYSQL_DATABASE=blogplatform
+MYSQL_USER=blog_user
+MYSQL_PASSWORD=your_password
+
+# JWT 密钥
+JWT_SECRET_KEY=your_jwt_secret_key
+```
+
+### 3. 构建并启动服务
+
+```bash
+# 构建并启动所有服务
 docker-compose up -d --build
 
-# 3. 查看服务状态
+# 查看服务状态
 docker-compose ps
 
-# 4. 查看日志
+# 查看日志
 docker-compose logs -f
 ```
 
-### 3. 常用命令
+### 4. 验证部署
+
+- 前端访问: http://localhost
+- 后端 API: http://localhost:8080/api/health
+- 健康检查: http://localhost/health
+
+## 服务说明
+
+### 前端服务 (frontend)
+
+- **端口**: 80 (映射到宿主机)
+- **基础镜像**: nginx:stable-bookworm (Debian)
+- **功能**: 
+  - 托管 Vue.js 静态文件
+  - 反向代理 API 请求到后端
+
+### 后端服务 (backend)
+
+- **端口**: 8080
+- **基础镜像**: eclipse-temurin:21-jre-noble (Debian/Ubuntu)
+- **功能**:
+  - 提供 REST API
+  - 处理业务逻辑
+
+### 数据库服务 (db)
+
+- **端口**: 3306
+- **镜像**: mysql:8.0-debian
+- **功能**:
+  - 数据持久化存储
+  - 自动执行初始化脚本
+
+### 缓存服务 (redis)
+
+- **端口**: 6379
+- **镜像**: redis:7-bookworm (Debian)
+- **功能**:
+  - Session 缓存
+  - 数据缓存
+
+## 网络架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Docker Network                          │
+│                      (blog-network)                          │
+│                                                              │
+│  ┌──────────┐     ┌──────────┐     ┌────────┐    ┌───────┐ │
+│  │ frontend │────▶│ backend  │────▶│   db   │    │ redis │ │
+│  │ (nginx)  │     │ (spring) │────▶│(mysql) │    │       │ │
+│  └────┬─────┘     └──────────┘     └────────┘    └───────┘ │
+│       │                                                      │
+└───────┼──────────────────────────────────────────────────────┘
+        │
+        ▼
+   宿主机 80 端口
+```
+
+## 常用命令
+
+### 服务管理
 
 ```bash
+# 启动服务
+docker-compose up -d
+
 # 停止服务
 docker-compose down
+
+# 重启服务
+docker-compose restart
 
 # 重新构建并启动
 docker-compose up -d --build
 
-# 只重启前端
-docker-compose restart frontend
-
-# 查看前端日志
-docker-compose logs -f frontend
-
-# 进入前端容器
-docker exec -it blog-frontend sh
+# 只重建特定服务
+docker-compose up -d --build backend
 ```
 
-## 配置说明
-
-### 前端配置 (frontend/nginx.conf)
-
-- **端口**: 80
-- **API 代理**: `/api/` → `http://backend:8080/api/`
-- **静态资源缓存**: 1年
-- **Gzip 压缩**: 已启用
-
-### 后端配置（待完成）
-
-当后端开发完成后，需要：
-
-1. 在 `backend/` 目录创建 `Dockerfile`
-2. 修改 `docker-compose.yml`，取消 backend 服务的注释并配置：
-   - 构建上下文
-   - 环境变量（数据库连接、JWT 密钥等）
-   - 依赖服务（数据库、Redis）
-
-### 示例后端 Dockerfile (Spring Boot)
-
-```dockerfile
-# backend/Dockerfile
-FROM eclipse-temurin:17-jdk-alpine AS builder
-WORKDIR /app
-COPY . .
-RUN ./gradlew bootJar --no-daemon
-
-FROM eclipse-temurin:17-jre-alpine
-WORKDIR /app
-COPY --from=builder /app/build/libs/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-```
-
-## 环境变量
-
-### 生产环境配置
-
-创建 `.env` 文件用于存储敏感配置：
+### 日志查看
 
 ```bash
-# .env
-MYSQL_ROOT_PASSWORD=your_secure_root_password
-MYSQL_PASSWORD=your_secure_password
-JWT_SECRET=your_jwt_secret_key_min_32_chars
+# 查看所有日志
+docker-compose logs
+
+# 查看特定服务日志
+docker-compose logs backend
+
+# 实时跟踪日志
+docker-compose logs -f
+
+# 查看最近 100 行日志
+docker-compose logs --tail 100
 ```
 
-然后在 `docker-compose.yml` 中引用：
-
-```yaml
-environment:
-  - DATABASE_PASSWORD=${MYSQL_PASSWORD}
-  - JWT_SECRET=${JWT_SECRET}
-```
-
-## 生产环境优化
-
-### 1. 添加 HTTPS（推荐使用 Traefik 或 Nginx 反向代理）
-
-```yaml
-# 在 docker-compose.yml 中添加 Traefik
-services:
-  traefik:
-    image: traefik:v2.10
-    command:
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-```
-
-### 2. 数据备份
+### 数据管理
 
 ```bash
-# 备份 MySQL 数据
-docker exec blog-mysql mysqldump -u root -p blog_platform > backup.sql
+# 进入 MySQL 容器
+docker exec -it blog-mysql mysql -u blog_user -p
 
-# 恢复数据
-docker exec -i blog-mysql mysql -u root -p blog_platform < backup.sql
+# 备份数据库
+docker exec blog-mysql mysqldump -u root -p blogplatform > backup.sql
+
+# 恢复数据库
+docker exec -i blog-mysql mysql -u root -p blogplatform < backup.sql
 ```
 
-### 3. 日志管理
+### 清理资源
+
+```bash
+# 停止并删除容器
+docker-compose down
+
+# 停止并删除容器和数据卷
+docker-compose down -v
+
+# 清理未使用的镜像
+docker image prune -f
+
+# 清理所有未使用的资源
+docker system prune -a
+```
+
+## 生产环境部署建议
+
+### 1. 安全配置
+
+- 修改默认数据库密码
+- 使用强 JWT 密钥
+- 配置 HTTPS（使用 Let's Encrypt 或其他证书）
+- 限制数据库端口只在内部网络访问
+
+### 2. 性能优化
 
 ```yaml
-# 在 docker-compose.yml 中配置日志
+# docker-compose.yml 中添加资源限制
 services:
-  frontend:
+  backend:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+```
+
+### 3. HTTPS 配置
+
+在 nginx.conf 中添加 SSL 配置，或使用反向代理（如 Traefik、Caddy）。
+
+### 4. 日志管理
+
+配置日志轮转，避免日志文件过大：
+
+```yaml
+services:
+  backend:
     logging:
       driver: "json-file"
       options:
@@ -159,46 +233,28 @@ services:
 
 ## 故障排除
 
-### 前端无法访问
+### 后端无法连接数据库
 
-```bash
-# 检查容器状态
-docker-compose ps
+1. 检查数据库服务是否正常启动：`docker-compose ps db`
+2. 检查数据库日志：`docker-compose logs db`
+3. 确认数据库连接配置正确
 
-# 检查 Nginx 配置
-docker exec blog-frontend nginx -t
+### 前端无法访问后端 API
 
-# 查看 Nginx 错误日志
-docker exec blog-frontend cat /var/log/nginx/error.log
-```
+1. 检查后端服务状态：`docker-compose ps backend`
+2. 验证健康检查：`curl http://localhost:8080/api/health`
+3. 检查 nginx 代理配置
 
-### API 请求失败
+### 容器启动失败
 
-1. 确认后端服务正在运行
-2. 检查网络连接：`docker exec blog-frontend ping backend`
-3. 检查后端日志：`docker-compose logs backend`
+1. 查看详细日志：`docker-compose logs <service-name>`
+2. 检查端口占用：`netstat -tlnp | grep <port>`
+3. 验证配置文件格式
 
-### 构建失败
+## 版本信息
 
-```bash
-# 清除 Docker 缓存重新构建
-docker-compose build --no-cache
-
-# 检查磁盘空间
-df -h
-
-# 清理未使用的 Docker 资源
-docker system prune -a
-```
-
-## 更新部署
-
-```bash
-# 1. 拉取最新代码
-git pull origin main
-
-# 2. 重新构建并启动
-docker-compose up -d --build
-
-# 3. 清理旧镜像（可选）
-docker image prune -f
+- 后端: Spring Boot 3.5.7, Java 21
+- 前端: Vue 3.4, Vite 5.0
+- 数据库: MySQL 8.0
+- 缓存: Redis 7
+- Web服务器: Nginx (Debian Bookworm)

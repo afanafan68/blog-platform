@@ -1,5 +1,7 @@
+version: '3.8'
+
 services:
-  # 前端服务
+  # 前端服务 - Nginx 反向代理
   frontend:
     build:
       context: ./frontend
@@ -8,7 +10,8 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - blog-network
     restart: unless-stopped
@@ -19,68 +22,91 @@ services:
       retries: 3
       start_period: 10s
 
-  # 后端服务（预留配置，待后端开发完成后取消注释并修改）
+  # 后端服务 - Spring Boot
   backend:
-    image: nginx:alpine  # 临时占位，后续替换为实际后端镜像
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: blog-backend
-    # build:
-    #   context: ./backend
-    #   dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    # environment:
-    #   - SPRING_PROFILES_ACTIVE=prod
-    #   - DATABASE_URL=jdbc:mysql://db:3306/blog_platform
-    #   - DATABASE_USERNAME=blog_user
-    #   - DATABASE_PASSWORD=your_password
-    #   - JWT_SECRET=your_jwt_secret_key
-    # depends_on:
-    #   - db
-    #   - redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/blogplatform?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=blog_user
+      - SPRING_DATASOURCE_PASSWORD=blog_password_2024
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_DATABASE=3
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - blog-network
     restart: unless-stopped
-    # volumes:
-    #   - upload-data:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - upload-data:/app/uploads
 
-  # 数据库服务（MySQL）
-  # db:
-  #   image: mysql:8.0
-  #   container_name: blog-mysql
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: root_password
-  #     MYSQL_DATABASE: blog_platform
-  #     MYSQL_USER: blog_user
-  #     MYSQL_PASSWORD: your_password
-  #   ports:
-  #     - "3306:3306"
-  #   volumes:
-  #     - mysql-data:/var/lib/mysql
-  #     - ./init-db:/docker-entrypoint-initdb.d  # 初始化 SQL 脚本
-  #   networks:
-  #     - blog-network
-  #   restart: unless-stopped
-  #   command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  # 数据库服务 - MySQL
+  db:
+    image: mysql:8.0-debian
+    container_name: blog-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_2024
+      MYSQL_DATABASE: blogplatform
+      MYSQL_USER: blog_user
+      MYSQL_PASSWORD: blog_password_2024
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - blog-network
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password_2024"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
-  # Redis 缓存（可选）
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: blog-redis
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis-data:/data
-  #   networks:
-  #     - blog-network
-  #   restart: unless-stopped
-  #   command: redis-server --appendonly yes
+  # Redis 缓存服务
+  redis:
+    image: redis:7-bookworm
+    container_name: blog-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - blog-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 networks:
   blog-network:
     driver: bridge
 
-# 数据卷（取消注释以启用）
-# volumes:
-#   mysql-data:
-#   redis-data:
-#   upload-data:
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  upload-data:
+    driver: local

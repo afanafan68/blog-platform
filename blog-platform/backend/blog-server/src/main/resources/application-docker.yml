@@ -1,0 +1,40 @@
+# Docker 环境配置
+server:
+  port: 8080
+
+spring:
+  application:
+    name: blog-server
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db:3306/blogplatform?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true&useSSL=false}
+    username: ${SPRING_DATASOURCE_USERNAME:blog_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:blog_password_2024}
+  data:
+    redis:
+      database: ${SPRING_DATA_REDIS_DATABASE:3}
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+mybatis:
+  mapper-locations: classpath:com/example/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+sky:
+  jwt:
+    # jwt签名加密密钥
+    secret-key: ${JWT_SECRET_KEY:blog-platform-jwt-secret-key-2024}
+    # jwt过期时间 (12小时)
+    ttl: 43200000
+    # 前端传递令牌名称
+    token-name: token
+    data-name: data
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.example: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

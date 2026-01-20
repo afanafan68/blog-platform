@@ -29,7 +29,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/category/list",
                         "/api/category/{id}/blogs",
                         "/api/tag/list",
-                        "/api/tag/hot"
+                        "/api/tag/hot",
+                        "/api/health",
+                        "/api/ready"
                 );
     }
 }

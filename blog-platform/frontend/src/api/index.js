@@ -2,9 +2,13 @@
 // Axios 全局配置及拦截器
 // ----------------------------------------------
 import router from '@/router'
+import { useUserStore } from '@/stores/user'
 import { getToken, removeToken } from '@/utils/auth'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+
+// 用于防止重复显示401错误消息
+let isShowingAuthError = false
 
 // 创建 axios 实例
 const request = axios.create({
@@ -54,9 +58,24 @@ request.interceptors.response.use(
       switch (status) {
         case 401:
           // 未登录或 Token 过期
-          ElMessage.error('登录已过期，请重新登录')
-          removeToken()
-          router.push('/login')
+          // 防止多个请求同时触发401时重复显示错误消息和重复跳转
+          if (!isShowingAuthError) {
+            isShowingAuthError = true
+            ElMessage.error('登录已过期，请重新登录')
+            // 清除用户状态（包括store中的响应式状态和localStorage中的token）
+            try {
+              const userStore = useUserStore()
+              userStore.reset()
+            } catch (e) {
+              // 如果store还未初始化，直接移除token
+              removeToken()
+            }
+            router.push('/login')
+            // 延迟重置标志，允许后续正常处理
+            setTimeout(() => {
+              isShowingAuthError = false
+            }, 2000)
+          }
           break
         case 403:
           ElMessage.error('没有权限访问')

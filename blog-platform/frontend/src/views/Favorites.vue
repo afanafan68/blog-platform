@@ -87,7 +87,7 @@ const emptyDescription = computed(() => {
 // 获取收藏标签列表
 const fetchTags = async () => {
   try {
-    const res = await request.get('/api/favorites/tags')
+    const res = await request.get('/favorites/tags')
     if (res.code === 200) {
       tagsList.value = res.data || []
     }
@@ -108,7 +108,7 @@ const fetchFavorites = async () => {
       params.tag = activeTag.value
     }
     
-    const res = await request.get('/api/favorites/list', { params })
+    const res = await request.get('/favorites/list', { params })
     if (res.code === 200) {
       favoriteList.value = res.data.records || []
       total.value = res.data.total || 0

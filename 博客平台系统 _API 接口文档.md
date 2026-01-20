@@ -903,7 +903,189 @@
 }
 ```
 
-### 3.5 分类与标签 (Common)
+### 3.5 收藏模块 (Favorite)
+
+**Base Path**: `/api/favorites`
+
+#### 3.5.1 添加收藏
+
+- **URL**: `/api/favorites`
+- **Method**: `POST`
+- **Header**: `Authorization` (必填)
+- **说明**: 将博客添加到收藏夹。
+
+**请求参数说明**
+
+| 字段名 | 类型 | 必填 | 说明   | 示例 |
+| ------ | ---- | ---- | ------ | ---- |
+| blogId | Long | 是   | 博客ID | 102  |
+
+**请求示例**
+
+```
+{
+  "blogId": 102
+}
+```
+
+**响应数据说明**
+
+- 类型: `Null`
+
+**响应示例**
+
+```
+{
+  "code": 200,
+  "message": "收藏成功",
+  "data": null
+}
+```
+
+#### 3.5.2 取消收藏
+
+- **URL**: `/{blogId}`
+- **Method**: `DELETE`
+- **Path Param**: `blogId` (博客ID)
+- **Header**: `Authorization` (必填)
+- **说明**: 取消收藏指定博客。
+
+**请求参数说明**
+
+无（仅路径参数）
+
+**响应数据说明**
+
+- 类型: `Null`
+
+**响应示例**
+
+```
+{
+  "code": 200,
+  "message": "取消收藏成功",
+  "data": null
+}
+```
+
+#### 3.5.3 获取收藏列表
+
+- **URL**: `/list`
+- **Method**: `GET`
+- **Header**: `Authorization` (必填)
+- **说明**: 获取当前用户的收藏博客列表，支持按标签筛选和分页。
+
+**请求参数说明**
+
+| 参数名 | 类型    | 必填 | 说明                           | 示例   |
+| ------ | ------- | ---- | ------------------------------ | ------ |
+| page   | Integer | 否   | 页码 (默认1)                   | 1      |
+| size   | Integer | 否   | 每页条数 (默认10)              | 10     |
+| tag    | String  | 否   | 按收藏标签筛选（空表示查全部） | "前端" |
+
+**响应数据说明**
+
+| 字段名  | 类型  | 说明                            |
+| ------- | ----- | ------------------------------- |
+| total   | Long  | 总记录数                        |
+| size    | Long  | 每页大小                        |
+| current | Long  | 当前页码                        |
+| pages   | Long  | 总页数                          |
+| records | Array | 收藏博客列表 (List<BlogListVO>) |
+
+**响应示例**
+
+```
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 20,
+    "size": 10,
+    "current": 1,
+    "pages": 2,
+    "records": [
+      {
+        "id": 1,
+        "title": "Blog 标题",
+        "summary": "这是摘要...",
+        "coverImage": "http//..."
+        "viewCount": 100,
+        "likeCount": 10,
+        "createTime": "2026-01-06T12:00:00",
+        "author": {
+          "id": 1001,
+          "nickname": "zhangsan",
+          "avatar": "http//..."
+        },
+        "category": { "id": 1, "name": "后端" },
+        "tags": [{ "id": 1, "name": "Java" }]
+      }
+    ]
+  }
+}
+```
+
+#### 3.5.4 获取收藏标签列表
+
+- **URL**: `/tags`
+- **Method**: `GET`
+- **Header**: `Authorization` (必填)
+- **说明**: 获取当前用户收藏的博客所包含的标签列表及对应收藏数量。
+
+**请求参数说明**
+
+无
+
+**响应数据说明**
+
+| 字段名 | 类型    | 说明               |
+| ------ | ------- | ------------------ |
+| id     | Long    | 标签ID             |
+| name   | String  | 标签名称           |
+| count  | Integer | 该标签下的收藏数量 |
+
+**响应示例**
+
+```
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    { "id": 1, "name": "前端", "count": 3 },
+    { "id": 2, "name": "后端", "count": 5 },
+    { "id": 3, "name": "Java", "count": 8 }
+  ]
+}
+```
+
+#### 3.5.5 检查是否已收藏
+
+- **URL**: `/check/{blogId}`
+- **Method**: `GET`
+- **Path Param**: `blogId` (博客ID)
+- **Header**: `Authorization` (必填)
+- **说明**: 检查当前用户是否已收藏指定博客。
+
+**请求参数说明**
+
+无（仅路径参数）
+
+**响应数据说明**
+
+- 类型: `Boolean`（true表示已收藏，false表示未收藏）
+
+**响应示例**
+
+```
+{
+  "code": 200,
+  "message": "success",
+  "data": true
+}
+```
+
+### 3.6 分类与标签 (Common)
 
 #### 3.5.1 获取分类列表
 

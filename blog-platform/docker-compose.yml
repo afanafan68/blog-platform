@@ -76,10 +76,9 @@ services:
       MYSQL_USER: blog_user
       MYSQL_PASSWORD: blog_password_2024
       TZ: Asia/Shanghai
-    # 仅在内部网络暴露，不暴露到宿主机（生产环境更安全）
-    # 如需外部访问数据库可取消注释下面的 ports
-    # ports:
-    #   - "3306:3306"
+    # 暴露数据库端口到宿主机，可从外部访问
+    ports:
+      - "3306:3306"
     expose:
       - "3306"
     volumes:

@@ -49,18 +49,18 @@
             </div>
             <div class="article-content">
             <div class="article-status">
-                <el-tag :type="Number(blog.status) === 1 ? 'success' : 'info'" size="small">
-                  {{ Number(blog.status) === 1 ? '已发布' : '草稿' }}
+                <el-tag :type="getBlogStatus(blog.id) === 1 ? 'success' : 'info'" size="small">
+                  {{ getBlogStatus(blog.id) === 1 ? '已发布' : '草稿' }}
                 </el-tag>
               </div>
               <h3 class="article-title" @click="goToDetail(blog)">{{ blog.title }}</h3>
               <p class="article-summary">{{ blog.summary }}</p>
               <div class="article-meta">
                 <span class="date">{{ formatDate(blog.createTime) }}</span>
-                <span class="views" v-if="Number(blog.status) === 1">
+                <span class="views" v-if="getBlogStatus(blog.id) === 1">
                   <el-icon><View /></el-icon> {{ blog.viewCount }}
                 </span>
-                <span class="likes" v-if="Number(blog.status) === 1">
+                <span class="likes" v-if="getBlogStatus(blog.id) === 1">
                   <el-icon><Star /></el-icon> {{ blog.likeCount }}
                 </span>
               </div>
@@ -112,6 +112,9 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
+// 用于存储博客的状态映射
+const blogStatusMap = ref({})
+
 const stats = reactive({
   blogCount: 0,
   viewCount: 0,
@@ -130,18 +133,39 @@ const calculateStats = (blogList) => {
   stats.likeCount = blogList.reduce((sum, blog) => sum + (blog.likeCount || 0), 0)
 }
 
-// 获取所有博客用于统计（不分页）
+// 获取所有博客用于统计，并构建状态映射
 const fetchAllBlogsForStats = async () => {
   try {
-    const res = await getUserBlogs(userStore.userInfo.id, {
-      page: 1,
-      size: 1000  // 获取足够多的数据用于统计
+    // 分别获取已发布和草稿的博客，以确定每篇博客的状态
+    const [publishedRes, draftRes] = await Promise.all([
+      getUserBlogs(userStore.userInfo.id, { page: 1, size: 1000, status: 1 }),
+      getUserBlogs(userStore.userInfo.id, { page: 1, size: 1000, status: 0 })
+    ])
+    
+    const publishedBlogs = publishedRes.data.records || []
+    const draftBlogs = draftRes.data.records || []
+    
+    // 构建状态映射
+    const statusMap = {}
+    publishedBlogs.forEach(blog => {
+      statusMap[blog.id] = 1  // 已发布
     })
-    const allBlogs = res.data.records || []
+    draftBlogs.forEach(blog => {
+      statusMap[blog.id] = 0  // 草稿
+    })
+    blogStatusMap.value = statusMap
+    
+    // 合并所有博客用于统计
+    const allBlogs = [...publishedBlogs, ...draftBlogs]
     calculateStats(allBlogs)
   } catch (error) {
     console.error('Failed to fetch blogs for stats:', error)
   }
+}
+
+// 获取博客状态
+const getBlogStatus = (blogId) => {
+  return blogStatusMap.value[blogId]
 }
 
 // 获取我的文章
@@ -169,7 +193,7 @@ const fetchMyBlogs = async () => {
 
 // 跳转详情
 const goToDetail = (blog) => {
-  if (Number(blog.status) === 1) {
+  if (getBlogStatus(blog.id) === 1) {
     router.push(`/blog/${blog.id}`)
   } else {
     router.push(`/edit/${blog.id}`)

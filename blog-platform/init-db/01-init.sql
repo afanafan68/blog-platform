@@ -5,6 +5,14 @@
 SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
 
+-- 创建数据库（如果不存在）
+CREATE DATABASE IF NOT EXISTS `blogplatform` 
+    DEFAULT CHARACTER SET utf8mb4 
+    DEFAULT COLLATE utf8mb4_unicode_ci;
+
+-- 使用数据库
+USE `blogplatform`;
+
 -- 创建用户表
 CREATE TABLE IF NOT EXISTS `user` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '用户ID',

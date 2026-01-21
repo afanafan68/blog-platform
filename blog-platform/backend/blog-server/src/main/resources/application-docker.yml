@@ -45,7 +45,8 @@ sky:
 app:
   upload:
     path: /app/uploads
-    base-url: ${APP_UPLOAD_BASE_URL:http://localhost:8080}
+    # 生产环境使用相对路径，由 Nginx 统一代理
+    base-url: ${APP_UPLOAD_BASE_URL:}
 
 # 阿里云 OSS 配置
 aliyun:

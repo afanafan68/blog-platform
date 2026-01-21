@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS `tag` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '标签ID',
     `name` VARCHAR(50) NOT NULL COMMENT '标签名称',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标签表';
@@ -83,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `comment` (
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
     `parent_id` BIGINT DEFAULT NULL COMMENT '父评论ID',
     `reply_user_id` BIGINT DEFAULT NULL COMMENT '回复用户ID',
+    `like_count` INT DEFAULT 0 COMMENT '点赞数',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`),
     KEY `idx_blog_id` (`blog_id`),
@@ -90,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `comment` (
     KEY `idx_parent_id` (`parent_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评论表';
 
--- 创建点赞表
+-- 创建博客点赞表
 CREATE TABLE IF NOT EXISTS `blog_like` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `blog_id` BIGINT NOT NULL COMMENT '博客ID',
@@ -99,17 +101,40 @@ CREATE TABLE IF NOT EXISTS `blog_like` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_blog_user` (`blog_id`, `user_id`),
     KEY `idx_user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='点赞表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='博客点赞表';
+
+-- 创建评论点赞表
+CREATE TABLE IF NOT EXISTS `comment_like` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `comment_id` BIGINT NOT NULL COMMENT '评论ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_comment_user` (`comment_id`, `user_id`),
+    KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评论点赞表';
+
+-- 创建收藏夹表
+CREATE TABLE IF NOT EXISTS `favorite_folder` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '收藏夹ID',
+    `name` VARCHAR(50) NOT NULL COMMENT '收藏夹名称',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='收藏夹表';
 
 -- 创建收藏表
 CREATE TABLE IF NOT EXISTS `favorite` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT 'ID',
     `blog_id` BIGINT NOT NULL COMMENT '博客ID',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `tag_name` VARCHAR(50) DEFAULT NULL COMMENT '收藏夹标签名',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_blog_user` (`blog_id`, `user_id`),
-    KEY `idx_user_id` (`user_id`)
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_tag_name` (`tag_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='收藏表';
 
 -- 插入默认分类

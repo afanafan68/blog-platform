@@ -17,6 +17,8 @@
     <packaging>pom</packaging>
     <modules>
         <module>blog-common</module>
+        <module>aliyun-oss-spring-boot-autoconfigure</module>
+        <module>aliyun-oss-spring-boot-starter</module>
         <module>blog-server</module>
     </modules>
 

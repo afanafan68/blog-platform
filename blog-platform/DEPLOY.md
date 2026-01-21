@@ -136,6 +136,11 @@ docker compose logs -f
 | SPRING_DATA_REDIS_PORT | 6379 | Redis 端口 |
 | SPRING_DATA_REDIS_DATABASE | 3 | Redis 数据库编号 |
 | JWT_SECRET_KEY | - | JWT 签名密钥 |
+| ALIYUN_OSS_ENDPOINT | https://oss-cn-beijing.aliyuncs.com | 阿里云 OSS 端点 |
+| ALIYUN_OSS_ACCESS_KEY_ID | - | 阿里云访问密钥 ID |
+| ALIYUN_OSS_ACCESS_KEY_SECRET | - | 阿里云访问密钥密码 |
+| ALIYUN_OSS_BUCKET_NAME | - | OSS 存储桶名称 |
+| ALIYUN_OSS_REGION | cn-beijing | OSS 区域 |
 
 ### 修改密码
 

@@ -125,7 +125,6 @@
 </template>
 
 <script setup>
-import { uploadImage } from '@/api/upload'
 import { updatePassword, updateProfile } from '@/api/user'
 import { useUserStore } from '@/stores/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -203,8 +202,10 @@ const initFormData = () => {
 // 上传头像
 const handleAvatarUpload = async ({ file }) => {
   try {
-    const res = await uploadImage(file)
-    profileForm.avatar = res.data.url
+    const { uploadAvatar } = await import('@/api/user')
+    const res = await uploadAvatar(file)
+    // API文档3.2.4：响应data直接是URL字符串
+    profileForm.avatar = res.data
     ElMessage.success('头像上传成功')
   } catch (error) {
     ElMessage.error('头像上传失败')

@@ -145,37 +145,32 @@ export function checkFavorite(blogId) {
 /**
  * 创建收藏夹
  * POST /api/favorites/folder
- * @param {Object} data - { name }
- * @description 创建一个新的收藏夹，包含用户主键、收藏文件夹主键、收藏文件夹名字
+ * @param {Object} data - { folderName }
+ * @description 创建一个新的收藏夹
  */
 export function createFavoriteFolder(data) {
-  return request.post('/favorites/folder', data)
+  // 后端DTO使用驼峰命名 folderName
+  const requestData = {
+    folderName: data.folderName || data.folder_name || data.name
+  }
+  return request.post('/favorites/folder', requestData)
 }
 
 /**
  * 获取收藏夹列表
  * GET /api/favorites/folders
- * @description 获取当前用户的所有收藏夹，返回收藏文件夹主键、收藏文件夹名字、收藏数量
+ * @description 获取当前用户的所有收藏夹，返回收藏文件夹主键、收藏文件夹名字
  */
 export function getFavoriteFolders() {
   return request.get('/favorites/folders')
 }
 
 /**
- * 删除收藏夹
- * DELETE /api/favorites/folder/{folderId}
- * @param {number} folderId - 收藏夹ID
+ * 根据收藏夹名称获取博客列表
+ * GET /api/favorites/folder/blog
+ * @param {Object} params - { page, size, folder_name }
+ * @description 获取指定收藏夹下的博客列表
  */
-export function deleteFavoriteFolder(folderId) {
-  return request.delete(`/favorites/folder/${folderId}`)
-}
-
-/**
- * 重命名收藏夹
- * PUT /api/favorites/folder/{folderId}
- * @param {number} folderId - 收藏夹ID
- * @param {Object} data - { name }
- */
-export function renameFavoriteFolder(folderId, data) {
-  return request.put(`/favorites/folder/${folderId}`, data)
+export function getFolderBlogs(params) {
+  return request.get('/favorites/folder/blog', { params })
 }

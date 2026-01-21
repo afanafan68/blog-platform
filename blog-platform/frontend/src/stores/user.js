@@ -59,7 +59,8 @@ export const useUserStore = defineStore('user', () => {
   async function fetchUserInfo() {
     try {
       const res = await getUserInfo()
-      userInfo.value = res.data
+      // API文档3.1.4：响应格式为 { code, message, data: { userInfo: {...} } }
+      userInfo.value = res.data.userInfo || res.data
       return res
     } catch (error) {
       // 获取失败，清除登录状态

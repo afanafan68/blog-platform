@@ -10,7 +10,7 @@ import com.example.pojo.vo.BlogListVO;
 import com.example.pojo.vo.PageResultVO;
 import com.example.result.Result;
 import com.example.service.BlogService;
-import com.aliyun.oss.AliOSSUtils;
+import com.example.utils.LocalFileUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class BlogController {
     private final BlogService blogService;
     
     @Autowired
-    private AliOSSUtils aliOSSUtils;
+    private LocalFileUtils localFileUtils;
 
     @GetMapping("/list")
     public Result<PageResultVO<BlogListVO>> getBlogList(BlogQueryDTO queryDTO) {
@@ -91,7 +91,7 @@ public class BlogController {
      */
     @PostMapping("/cover")
     public Result<String> uploadCover(MultipartFile file) throws Exception {
-        String coverUrl = aliOSSUtils.upload(file);
+        String coverUrl = localFileUtils.uploadCover(file);
         return Result.success(coverUrl, "上传成功");
     }
 }

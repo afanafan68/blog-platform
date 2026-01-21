@@ -10,6 +10,8 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Paths;
+
 @Configuration
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
@@ -37,9 +39,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 将路径转换为绝对路径，解决相对路径在不同环境下可能出现的问题
+        String absolutePath = Paths.get(uploadPath).toAbsolutePath().normalize().toString();
+        // 确保路径以斜杠结尾，否则 Spring 可能无法正确解析目录
+        if (!absolutePath.endsWith("/") && !absolutePath.endsWith("\\")) {
+            absolutePath += "/";
+        }
+        
         // 配置上传文件的静态资源访问
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
+                .addResourceLocations("file:" + absolutePath);
     }
 
     @Override

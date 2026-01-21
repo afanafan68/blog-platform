@@ -1,7 +1,6 @@
 // com/example/controller/UserController.java
 package com.example.controller;
 
-import com.aliyun.oss.AliOSSUtils;
 import com.example.context.BaseContext;
 import com.example.pojo.dto.PasswordUpdateDTO;
 import com.example.pojo.dto.UserProfileDTO;
@@ -9,7 +8,7 @@ import com.example.pojo.vo.PrivateUserVO;
 import com.example.pojo.vo.PublicUserVO;
 import com.example.result.Result;
 import com.example.service.UserService;
-import jakarta.servlet.http.HttpServletRequest;
+import com.example.utils.LocalFileUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +22,7 @@ public class UserController {
     private final UserService userService;
 
     @Autowired
-    private AliOSSUtils aliOSSUtils;
+    private LocalFileUtils localFileUtils;
 
     @GetMapping("/{id}")
     public Result<PublicUserVO> getUserById(@PathVariable Long id) {
@@ -48,7 +47,7 @@ public class UserController {
     @PostMapping("/avatar")
     public Result<String> uploadAvatar(MultipartFile file) throws Exception {
         Long userId = BaseContext.getCurrentId();
-        String avatarUrl = aliOSSUtils.upload(file);
+        String avatarUrl = localFileUtils.uploadAvatar(file);
         userService.updateAvatar(userId, avatarUrl);
         return Result.success(avatarUrl, "上传成功");
     }

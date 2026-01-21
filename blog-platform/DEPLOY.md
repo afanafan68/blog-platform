@@ -1,30 +1,96 @@
 # 博客平台 Docker 部署指南
 
-本文档介绍如何使用 Docker 和 Docker Compose 部署博客平台。
+本文档详细说明如何使用 Docker 和 Docker Compose 部署博客平台。
+
+## 目录
+
+- [系统要求](#系统要求)
+- [项目架构](#项目架构)
+- [快速部署](#快速部署)
+- [详细配置](#详细配置)
+- [数据持久化](#数据持久化)
+- [常用命令](#常用命令)
+- [故障排除](#故障排除)
 
 ## 系统要求
 
-- Docker 20.10+
-- Docker Compose 2.0+
-- 至少 2GB 可用内存
-- 至少 10GB 可用磁盘空间
+- **操作系统**: Debian 13 (Trixie) 或 Debian 12 (Bookworm)，也支持其他 Linux 发行版
+- **Docker**: 20.10+
+- **Docker Compose**: 2.0+
+- **内存**: 至少 4GB RAM
+- **磁盘空间**: 至少 10GB 可用空间
 
-## 目录结构
+### 安装 Docker (Debian)
+
+```bash
+# 更新包索引
+sudo apt-get update
+
+# 安装必要的包
+sudo apt-get install -y ca-certificates curl gnupg
+
+# 添加 Docker 官方 GPG 密钥
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# 添加 Docker 仓库
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 安装 Docker
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 启动 Docker 服务
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# 将当前用户添加到 docker 组（可选，避免每次使用 sudo）
+sudo usermod -aG docker $USER
+```
+
+## 项目架构
 
 ```
-blog-platform/
-├── backend/                 # 后端 Spring Boot 项目
-│   ├── Dockerfile          # 后端 Dockerfile
-│   ├── .dockerignore       # Docker 构建忽略文件
-│   ├── blog-common/        # 公共模块
-│   └── blog-server/        # 服务模块
-├── frontend/               # 前端 Vue.js 项目
-│   ├── Dockerfile          # 前端 Dockerfile
-│   ├── .dockerignore       # Docker 构建忽略文件
-│   └── nginx.conf          # Nginx 配置
-├── init-db/                # 数据库初始化脚本
-│   └── 01-init.sql         # 初始化 SQL
-└── docker-compose.yml      # Docker Compose 配置
+┌─────────────────────────────────────────────────────────────┐
+│                      宿主机 (Debian 13)                      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────┐                                            │
+│  │   用户请求   │ ──────► Port 80                            │
+│  └─────────────┘                                            │
+│         │                                                   │
+│         ▼                                                   │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │              Docker 内部网络 (blog-network)          │    │
+│  │  ┌─────────────┐                                    │    │
+│  │  │  Frontend   │ Nginx (反向代理)                    │    │
+│  │  │  Port: 80   │                                    │    │
+│  │  └──────┬──────┘                                    │    │
+│  │         │ /api/* 请求                               │    │
+│  │         ▼                                           │    │
+│  │  ┌─────────────┐                                    │    │
+│  │  │  Backend    │ Spring Boot                        │    │
+│  │  │  Port: 8080 │                                    │    │
+│  │  └──────┬──────┘                                    │    │
+│  │         │                                           │    │
+│  │    ┌────┴────┐                                      │    │
+│  │    ▼         ▼                                      │    │
+│  │  ┌─────┐  ┌─────┐                                   │    │
+│  │  │MySQL│  │Redis│                                   │    │
+│  │  │:3306│  │:6379│                                   │    │
+│  │  └─────┘  └─────┘                                   │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  数据卷:                                                    │
+│  - mysql-data: MySQL 数据持久化                             │
+│  - redis-data: Redis 数据持久化                             │
+│  - upload-data: 上传文件持久化                              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## 快速部署
@@ -36,90 +102,113 @@ git clone https://github.com/afanafan68/blog-platform.git
 cd blog-platform/blog-platform
 ```
 
-### 2. 配置环境变量（可选）
-
-如需自定义配置，可以创建 `.env` 文件：
-
-```bash
-# 数据库配置
-MYSQL_ROOT_PASSWORD=your_root_password
-MYSQL_DATABASE=blogplatform
-MYSQL_USER=blog_user
-MYSQL_PASSWORD=your_password
-
-# JWT 密钥
-JWT_SECRET_KEY=your_jwt_secret_key
-```
-
-### 3. 构建并启动服务
+### 2. 一键部署
 
 ```bash
 # 构建并启动所有服务
-docker-compose up -d --build
+docker compose up -d --build
 
 # 查看服务状态
-docker-compose ps
+docker compose ps
 
 # 查看日志
-docker-compose logs -f
+docker compose logs -f
 ```
 
-### 4. 验证部署
+### 3. 访问应用
 
-- 前端访问: http://localhost
-- 后端 API: http://localhost:8080/api/health
-- 健康检查: http://localhost/health
+- **前端**: http://localhost
+- **API 健康检查**: http://localhost/api/health
 
-## 服务说明
+## 详细配置
 
-### 前端服务 (frontend)
+### 环境变量
 
-- **端口**: 80 (映射到宿主机)
-- **基础镜像**: nginx:stable-bookworm (Debian)
-- **功能**: 
-  - 托管 Vue.js 静态文件
-  - 反向代理 API 请求到后端
+后端服务支持以下环境变量配置：
 
-### 后端服务 (backend)
+| 变量名 | 默认值 | 说明 |
+|--------|--------|------|
+| SPRING_PROFILES_ACTIVE | docker | Spring 配置文件 |
+| SPRING_DATASOURCE_URL | jdbc:mysql://db:3306/blogplatform... | MySQL 连接 URL |
+| SPRING_DATASOURCE_USERNAME | blog_user | 数据库用户名 |
+| SPRING_DATASOURCE_PASSWORD | blog_password_2024 | 数据库密码 |
+| SPRING_DATA_REDIS_HOST | redis | Redis 主机名 |
+| SPRING_DATA_REDIS_PORT | 6379 | Redis 端口 |
+| SPRING_DATA_REDIS_DATABASE | 3 | Redis 数据库编号 |
+| JWT_SECRET_KEY | - | JWT 签名密钥 |
 
-- **端口**: 8080
-- **基础镜像**: eclipse-temurin:21-jre-noble (Debian/Ubuntu)
-- **功能**:
-  - 提供 REST API
-  - 处理业务逻辑
+### 修改密码
 
-### 数据库服务 (db)
+**重要**: 生产环境部署前，请修改以下默认密码：
 
-- **端口**: 3306
-- **镜像**: mysql:8.0-debian
-- **功能**:
-  - 数据持久化存储
-  - 自动执行初始化脚本
+1. 编辑 `docker-compose.yml`：
+   - `MYSQL_ROOT_PASSWORD`
+   - `MYSQL_PASSWORD`
+   - `SPRING_DATASOURCE_PASSWORD`
+   - `JWT_SECRET_KEY`
 
-### 缓存服务 (redis)
+2. 确保密码一致性：
+   ```yaml
+   # MySQL 服务
+   db:
+     environment:
+       MYSQL_ROOT_PASSWORD: 你的root密码
+       MYSQL_PASSWORD: 你的用户密码
+   
+   # 后端服务
+   backend:
+     environment:
+       SPRING_DATASOURCE_PASSWORD: 你的用户密码  # 必须与上面 MYSQL_PASSWORD 一致
+   ```
 
-- **端口**: 6379
-- **镜像**: redis:7-bookworm (Debian)
-- **功能**:
-  - Session 缓存
-  - 数据缓存
+### 暴露调试端口
 
-## 网络架构
+如需在开发环境暴露后端或数据库端口，取消相关注释：
 
+```yaml
+# docker-compose.yml
+backend:
+  ports:
+    - "8080:8080"  # 取消注释
+
+db:
+  ports:
+    - "3306:3306"  # 取消注释
+
+redis:
+  ports:
+    - "6379:6379"  # 取消注释
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      Docker Network                          │
-│                      (blog-network)                          │
-│                                                              │
-│  ┌──────────┐     ┌──────────┐     ┌────────┐    ┌───────┐ │
-│  │ frontend │────▶│ backend  │────▶│   db   │    │ redis │ │
-│  │ (nginx)  │     │ (spring) │────▶│(mysql) │    │       │ │
-│  └────┬─────┘     └──────────┘     └────────┘    └───────┘ │
-│       │                                                      │
-└───────┼──────────────────────────────────────────────────────┘
-        │
-        ▼
-   宿主机 80 端口
+
+## 数据持久化
+
+项目使用 Docker 命名卷实现数据持久化：
+
+| 卷名 | 用途 | 容器路径 |
+|------|------|----------|
+| mysql-data | MySQL 数据库数据 | /var/lib/mysql |
+| mysql-conf | MySQL 配置文件 | /etc/mysql/conf.d |
+| redis-data | Redis 缓存数据 | /data |
+| upload-data | 用户上传文件 | /app/uploads |
+
+### 备份数据
+
+```bash
+# 备份 MySQL 数据
+docker exec blog-mysql mysqldump -u root -proot_password_2024 blogplatform > backup.sql
+
+# 备份数据卷
+docker run --rm -v mysql-data:/data -v $(pwd):/backup alpine tar cvf /backup/mysql-data.tar /data
+```
+
+### 恢复数据
+
+```bash
+# 恢复 MySQL 数据
+docker exec -i blog-mysql mysql -u root -proot_password_2024 blogplatform < backup.sql
+
+# 恢复数据卷
+docker run --rm -v mysql-data:/data -v $(pwd):/backup alpine tar xvf /backup/mysql-data.tar -C /
 ```
 
 ## 常用命令
@@ -127,134 +216,121 @@ docker-compose logs -f
 ### 服务管理
 
 ```bash
-# 启动服务
-docker-compose up -d
+# 启动所有服务
+docker compose up -d
 
-# 停止服务
-docker-compose down
+# 停止所有服务
+docker compose down
 
-# 重启服务
-docker-compose restart
+# 重启特定服务
+docker compose restart backend
 
 # 重新构建并启动
-docker-compose up -d --build
+docker compose up -d --build
 
-# 只重建特定服务
-docker-compose up -d --build backend
-```
+# 查看服务状态
+docker compose ps
 
-### 日志查看
+# 查看服务日志
+docker compose logs -f [service_name]
 
-```bash
-# 查看所有日志
-docker-compose logs
-
-# 查看特定服务日志
-docker-compose logs backend
-
-# 实时跟踪日志
-docker-compose logs -f
-
-# 查看最近 100 行日志
-docker-compose logs --tail 100
-```
-
-### 数据管理
-
-```bash
-# 进入 MySQL 容器
-docker exec -it blog-mysql mysql -u blog_user -p
-
-# 备份数据库
-docker exec blog-mysql mysqldump -u root -p blogplatform > backup.sql
-
-# 恢复数据库
-docker exec -i blog-mysql mysql -u root -p blogplatform < backup.sql
+# 进入容器
+docker exec -it blog-backend sh
+docker exec -it blog-mysql mysql -u root -p
+docker exec -it blog-redis redis-cli
 ```
 
 ### 清理资源
 
 ```bash
-# 停止并删除容器
-docker-compose down
+# 停止并删除容器、网络
+docker compose down
 
-# 停止并删除容器和数据卷
-docker-compose down -v
+# 停止并删除容器、网络、卷（⚠️ 会删除所有数据）
+docker compose down -v
 
 # 清理未使用的镜像
-docker image prune -f
+docker image prune -a
 
 # 清理所有未使用的资源
 docker system prune -a
 ```
 
-## 生产环境部署建议
-
-### 1. 安全配置
-
-- 修改默认数据库密码
-- 使用强 JWT 密钥
-- 配置 HTTPS（使用 Let's Encrypt 或其他证书）
-- 限制数据库端口只在内部网络访问
-
-### 2. 性能优化
-
-```yaml
-# docker-compose.yml 中添加资源限制
-services:
-  backend:
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '1'
-          memory: 1G
-```
-
-### 3. HTTPS 配置
-
-在 nginx.conf 中添加 SSL 配置，或使用反向代理（如 Traefik、Caddy）。
-
-### 4. 日志管理
-
-配置日志轮转，避免日志文件过大：
-
-```yaml
-services:
-  backend:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-```
-
 ## 故障排除
 
-### 后端无法连接数据库
+### 1. 容器启动失败
 
-1. 检查数据库服务是否正常启动：`docker-compose ps db`
-2. 检查数据库日志：`docker-compose logs db`
-3. 确认数据库连接配置正确
+```bash
+# 查看详细日志
+docker compose logs backend
+docker compose logs db
 
-### 前端无法访问后端 API
+# 检查容器状态
+docker compose ps -a
+```
 
-1. 检查后端服务状态：`docker-compose ps backend`
-2. 验证健康检查：`curl http://localhost:8080/api/health`
-3. 检查 nginx 代理配置
+### 2. 数据库连接失败
 
-### 容器启动失败
+```bash
+# 检查 MySQL 是否就绪
+docker exec blog-mysql mysqladmin ping -h localhost -u root -p
 
-1. 查看详细日志：`docker-compose logs <service-name>`
-2. 检查端口占用：`netstat -tlnp | grep <port>`
-3. 验证配置文件格式
+# 检查网络连接
+docker exec blog-backend ping db
+```
 
-## 版本信息
+### 3. 前端无法访问后端 API
 
-- 后端: Spring Boot 3.5.7, Java 21
-- 前端: Vue 3.4, Vite 5.0
-- 数据库: MySQL 8.0
-- 缓存: Redis 7
-- Web服务器: Nginx (Debian Bookworm)
+```bash
+# 检查后端健康状态
+curl http://localhost/api/health
+
+# 检查 Nginx 配置
+docker exec blog-frontend nginx -t
+
+# 查看 Nginx 日志
+docker logs blog-frontend
+```
+
+### 4. 端口被占用
+
+```bash
+# 检查端口占用
+sudo lsof -i :80
+sudo lsof -i :8080
+sudo lsof -i :3306
+
+# 修改 docker-compose.yml 中的端口映射
+ports:
+  - "8081:80"  # 改用其他端口
+```
+
+### 5. 重置所有数据
+
+```bash
+# 停止服务并删除所有数据
+docker compose down -v
+
+# 删除构建缓存
+docker builder prune -a
+
+# 重新构建并启动
+docker compose up -d --build
+```
+
+## 生产环境建议
+
+1. **使用 HTTPS**: 配置 SSL 证书，可以使用 Let's Encrypt
+2. **修改默认密码**: 更改所有默认密码
+3. **限制端口暴露**: 仅暴露必要的端口（80/443）
+4. **设置防火墙**: 使用 iptables 或 ufw 限制访问
+5. **定期备份**: 设置自动备份脚本
+6. **监控告警**: 配置容器监控和告警
+
+## 技术栈
+
+- **前端**: Vue 3 + Vite + Element Plus + Nginx
+- **后端**: Spring Boot 3.5 + MyBatis + Java 21
+- **数据库**: MySQL 8.0 (Debian)
+- **缓存**: Redis 7 (Bookworm)
+- **容器化**: Docker + Docker Compose

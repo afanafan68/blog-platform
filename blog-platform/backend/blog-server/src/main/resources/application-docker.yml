@@ -1,13 +1,18 @@
 # Docker 环境配置
 server:
   port: 8080
+  # 配置请求大小限制（用于文件上传）
+  servlet:
+    context-path: /
+  tomcat:
+    max-swallow-size: 100MB
 
 spring:
   application:
     name: blog-server
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db:3306/blogplatform?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true&useSSL=false}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db:3306/blogplatform?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${SPRING_DATASOURCE_USERNAME:blog_user}
     password: ${SPRING_DATASOURCE_PASSWORD:blog_password_2024}
   data:
@@ -15,6 +20,11 @@ spring:
       database: ${SPRING_DATA_REDIS_DATABASE:3}
       host: ${SPRING_DATA_REDIS_HOST:redis}
       port: ${SPRING_DATA_REDIS_PORT:6379}
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 100MB
 
 mybatis:
   mapper-locations: classpath:com/example/mapper/*.xml
@@ -30,6 +40,11 @@ sky:
     # 前端传递令牌名称
     token-name: token
     data-name: data
+
+# 应用配置
+app:
+  upload:
+    path: /app/uploads
 
 # 日志配置
 logging:

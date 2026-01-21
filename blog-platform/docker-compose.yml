@@ -28,16 +28,21 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: blog-backend
-    ports:
-      - "8080:8080"
+    # 仅在内部网络暴露，不暴露到宿主机（生产环境更安全）
+    # 如需调试可取消注释下面的 ports
+    # ports:
+    #   - "8080:8080"
+    expose:
+      - "8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/blogplatform?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true&useSSL=false
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/blogplatform?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&autoReconnect=true&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
       - SPRING_DATASOURCE_USERNAME=blog_user
       - SPRING_DATASOURCE_PASSWORD=blog_password_2024
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
       - SPRING_DATA_REDIS_DATABASE=3
+      - JWT_SECRET_KEY=blog-platform-jwt-secret-key-2024-production
     depends_on:
       db:
         condition: service_healthy
@@ -55,7 +60,7 @@ services:
     volumes:
       - upload-data:/app/uploads
 
-  # 数据库服务 - MySQL
+  # 数据库服务 - MySQL 8.0 (基于 Debian)
   db:
     image: mysql:8.0-debian
     container_name: blog-mysql
@@ -64,15 +69,29 @@ services:
       MYSQL_DATABASE: blogplatform
       MYSQL_USER: blog_user
       MYSQL_PASSWORD: blog_password_2024
-    ports:
-      - "3306:3306"
+      TZ: Asia/Shanghai
+    # 仅在内部网络暴露，不暴露到宿主机（生产环境更安全）
+    # 如需外部访问数据库可取消注释下面的 ports
+    # ports:
+    #   - "3306:3306"
+    expose:
+      - "3306"
     volumes:
+      # MySQL 数据持久化
       - mysql-data:/var/lib/mysql
-      - ./init-db:/docker-entrypoint-initdb.d
+      # 初始化脚本
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+      # MySQL 配置持久化（可选）
+      - mysql-conf:/etc/mysql/conf.d
     networks:
       - blog-network
     restart: unless-stopped
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=caching_sha2_password
+      - --max_connections=500
+      - --innodb_buffer_pool_size=256M
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password_2024"]
       interval: 10s
@@ -80,18 +99,23 @@ services:
       retries: 10
       start_period: 30s
 
-  # Redis 缓存服务
+  # Redis 缓存服务 (基于 Debian Bookworm)
   redis:
     image: redis:7-bookworm
     container_name: blog-redis
-    ports:
-      - "6379:6379"
+    # 仅在内部网络暴露，不暴露到宿主机（生产环境更安全）
+    # 如需外部访问 Redis 可取消注释下面的 ports
+    # ports:
+    #   - "6379:6379"
+    expose:
+      - "6379"
     volumes:
+      # Redis 数据持久化
       - redis-data:/data
     networks:
       - blog-network
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -99,14 +123,25 @@ services:
       retries: 5
       start_period: 10s
 
+# Docker 内部网络
 networks:
   blog-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
 
+# 数据卷 - 持久化存储
 volumes:
+  # MySQL 数据持久化卷
   mysql-data:
     driver: local
+  # MySQL 配置持久化卷
+  mysql-conf:
+    driver: local
+  # Redis 数据持久化卷
   redis-data:
     driver: local
+  # 上传文件持久化卷
   upload-data:
     driver: local

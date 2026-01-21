@@ -9,19 +9,22 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # 复制 package.json 和 lock 文件
-COPY package.json pnpm-lock.yaml ./
+COPY package.json package-lock.json ./
+
+# 如果存在 pnpm-lock.yaml 则使用，否则使用 package-lock.json
+COPY pnpm-lock.yaml* ./
 
 # 安装依赖
-RUN pnpm install --frozen-lockfile
+RUN if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else npm ci; fi
 
 # 复制源代码
 COPY . .
 
-# 构建项目
-RUN pnpm build
+# 构建项目 (生产模式)
+RUN npm run build
 
-# 阶段2: 生产阶段 - 基于 Debian 的 Nginx
-FROM nginx:stable-bookworm
+# 阶段2: 生产阶段 - 基于 Debian Bookworm 的 Nginx
+FROM nginx:stable-bookworm AS runtime
 
 # 安装 curl 用于健康检查
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -40,6 +43,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # 设置正确的权限
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
     chmod -R 755 /usr/share/nginx/html
+
+# 创建 nginx 运行时需要的目录
+RUN mkdir -p /var/cache/nginx /var/run && \
+    chown -R nginx:nginx /var/cache/nginx /var/run
 
 # 暴露端口
 EXPOSE 80

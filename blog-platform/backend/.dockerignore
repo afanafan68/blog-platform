@@ -29,7 +29,6 @@ Thumbs.db
 *.txt
 !README.md
 
-# 本地配置
+# 本地配置（保留 application-docker.yml）
 application-local.yml
-application-dev.yml
 *.properties.local

@@ -34,6 +34,8 @@ tests
 __tests__
 coverage
 
-# 环境变量文件（本地开发用）
+# 环境变量文件（保留 .env.production）
 .env.local
 .env.*.local
+.env.development
+.env.mock
